@@ -209,7 +209,11 @@ void attachInterrupt(uint8_t pin, void (*function)(void), int mode)
 	}
 	mask = (mask << 16) | 0x01000000;
 	config = portConfigRegister(pin);
-
+	if ((*config & 0x00000700) == 0) {
+		// for compatibility with programs which depend
+		// on AVR hardware default to input mode.
+		pinMode(pin, INPUT);
+	}
 #if defined(KINETISK)
 	attachInterruptVector(IRQ_PORTA, port_A_isr);
 	attachInterruptVector(IRQ_PORTB, port_B_isr);
@@ -509,6 +513,7 @@ extern void usb_init(void);
 #endif
 
 //void init_pins(void)
+__attribute__((noinline))
 void _init_Teensyduino_internal_(void)
 {
 #if defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
@@ -1066,19 +1071,16 @@ void pinMode(uint8_t pin, uint8_t mode)
 #else
 		*portModeRegister(pin) &= ~digitalPinToBitMask(pin);
 #endif
-		if (mode == INPUT || mode == INPUT_PULLUP || mode == INPUT_PULLDOWN) {
+		if (mode == INPUT) {
 			*config = PORT_PCR_MUX(1);
-			if (mode == INPUT_PULLUP) {
-		    	*config |= (PORT_PCR_PE | PORT_PCR_PS); // pullup
-			} else if (mode == INPUT_PULLDOWN) {
-			    *config |= (PORT_PCR_PE); // pulldown
-			    *config &= ~(PORT_PCR_PS);
-			}
-		} else {
-			*config = PORT_PCR_MUX(1) | PORT_PCR_PE | PORT_PCR_PS; // pullup
+		} else if (mode == INPUT_PULLUP) {
+			*config = PORT_PCR_MUX(1) | PORT_PCR_PE | PORT_PCR_PS;
+		} else if (mode == INPUT_PULLDOWN) {
+			*config = PORT_PCR_MUX(1) | PORT_PCR_PE;
+		} else { // INPUT_DISABLE
+			*config = 0;
 		}
 	}
-
 }
 
 
