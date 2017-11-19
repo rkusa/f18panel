@@ -1,6 +1,6 @@
 /* Teensyduino Core Library
  * http://www.pjrc.com/teensy/
- * Copyright (c) 2016 PJRC.COM, LLC.
+ * Copyright (c) 2017 PJRC.COM, LLC.
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -49,7 +49,7 @@ audio_block_t * AudioInputUSB::ready_right;
 uint16_t AudioInputUSB::incoming_count;
 uint8_t AudioInputUSB::receive_flag;
 
-struct usb_audio_features_struct AudioInputUSB::features = {0,0,FEATURE_MAX_VOLUME};
+struct usb_audio_features_struct AudioInputUSB::features = {0,0,FEATURE_MAX_VOLUME/2};
 
 #define DMABUFATTR __attribute__ ((section(".dmabuffers"), aligned (4)))
 uint16_t usb_audio_receive_buffer[AUDIO_RX_SIZE/2] DMABUFATTR;
@@ -255,8 +255,11 @@ void AudioOutputUSB::update(void)
 {
 	audio_block_t *left, *right;
 
-	left = receiveReadOnly(0); // input 0 = left channel
-	right = receiveReadOnly(1); // input 1 = right channel
+	// TODO: we shouldn't be writing to these......
+	//left = receiveReadOnly(0); // input 0 = left channel
+	//right = receiveReadOnly(1); // input 1 = right channel
+	left = receiveWritable(0); // input 0 = left channel
+	right = receiveWritable(1); // input 1 = right channel
 	if (usb_audio_transmit_setting == 0) {
 		if (left) release(left);
 		if (right) release(right);
@@ -268,12 +271,20 @@ void AudioOutputUSB::update(void)
 		return;
 	}
 	if (left == NULL) {
-		if (right == NULL) return;
-		right->ref_count++;
-		left = right;
-	} else if (right == NULL) {
-		left->ref_count++;
-		right = left;
+		left = allocate();
+		if (left == NULL) {
+			if (right) release(right);
+			return;
+		}
+		memset(left->data, 0, sizeof(left->data));
+	}
+	if (right == NULL) {
+		right = allocate();
+		if (right == NULL) {
+			release(left);
+			return;
+		}
+		memset(right->data, 0, sizeof(right->data));
 	}
 	__disable_irq();
 	if (left_1st == NULL) {
@@ -349,6 +360,31 @@ unsigned int usb_audio_transmit_callback(void)
 	}
 	return target * 4;
 }
+
+
+struct setup_struct {
+  union {
+    struct {
+	uint8_t bmRequestType;
+	uint8_t bRequest;
+	union {
+		struct {
+			uint8_t bChannel;  // 0=main, 1=left, 2=right
+			uint8_t bCS;       // Control Selector
+		};
+		uint16_t wValue;
+	};
+	union {
+		struct {
+			uint8_t bIfEp;     // type of entity
+			uint8_t bEntityId; // UnitID, TerminalID, etc.
+		};
+		uint16_t wIndex;
+	};
+	uint16_t wLength;
+    };
+  };
+};
 
 int usb_audio_get_feature(void *stp, uint8_t *data, uint32_t *datalen)
 {

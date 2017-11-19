@@ -1,6 +1,6 @@
 /* Teensyduino Core Library
  * http://www.pjrc.com/teensy/
- * Copyright (c) 2013 PJRC.COM, LLC.
+ * Copyright (c) 2017 PJRC.COM, LLC.
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -158,7 +158,7 @@ void serial3_format(uint32_t format)
 	c = UART2_C3 & ~0x10;
 	if (format & 0x20) c |= 0x10;		// tx invert
 	UART2_C3 = c;
-#ifdef SERIAL_9BIT_SUPPORT
+#if defined(SERIAL_9BIT_SUPPORT) && !defined(KINETISL)
 	c = UART2_C4 & 0x1F;
 	if (format & 0x08) c |= 0x20;		// 9 bit mode with parity (requires 10 bits)
 	UART2_C4 = c;
@@ -181,8 +181,19 @@ void serial3_end(void)
 	while (transmitting) yield();  // wait for buffered data to send
 	NVIC_DISABLE_IRQ(IRQ_UART2_STATUS);
 	UART2_C2 = 0;
+	#if defined(KINETISK)
 	CORE_PIN7_CONFIG = PORT_PCR_PE | PORT_PCR_PS | PORT_PCR_MUX(1);
 	CORE_PIN8_CONFIG = PORT_PCR_PE | PORT_PCR_PS | PORT_PCR_MUX(1);
+	#elif defined(KINETISL)
+	switch (rx_pin_num) {
+		case 7: CORE_PIN7_CONFIG = PORT_PCR_PE | PORT_PCR_PS | PORT_PCR_MUX(1); break;
+		case 6: CORE_PIN6_CONFIG = PORT_PCR_PE | PORT_PCR_PS | PORT_PCR_MUX(1); break;
+	}
+	switch (tx_pin_num & 127) {
+		case 8:  CORE_PIN8_CONFIG = PORT_PCR_PE | PORT_PCR_PS | PORT_PCR_MUX(1); break;
+		case 20: CORE_PIN20_CONFIG = PORT_PCR_PE | PORT_PCR_PS | PORT_PCR_MUX(1); break;
+	}
+	#endif	
 	rx_buffer_head = 0;
 	rx_buffer_tail = 0;
 	if (rts_pin) rts_deassert();

@@ -1,40 +1,93 @@
-/*
-  wiring.h - Partial implementation of the Wiring API for the ATmega8.
-  Part of Arduino - http://www.arduino.cc/
-
-  Copyright (c) 2005-2006 David A. Mellis
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General
-  Public License along with this library; if not, write to the
-  Free Software Foundation, Inc., 59 Temple Place, Suite 330,
-  Boston, MA  02111-1307  USA
-
-  $Id: wiring.h 387 2008-03-08 21:30:00Z mellis $
-*/
+/* Teensyduino Core Library
+ * http://www.pjrc.com/teensy/
+ * Copyright (c) 2017 PJRC.COM, LLC.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * 1. The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * 2. If the Software is incorporated into a build system that allows
+ * selection among a list of target devices, then similar target
+ * devices manufactured by PJRC.COM must be included in the list of
+ * target devices and selectable in the same manner.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #ifndef Wiring_h
 #define Wiring_h
 
-//#include <avr/io.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "binary.h"
 #include "core_id.h"
 #include "core_pins.h"
 
+// type_traits interferes with min() and other defines
+// include it early, so we can define these later
+// for Arduino compatibility
 #ifdef __cplusplus
-extern "C"{
+#include <type_traits>
+// when the input number is an integer type, do all math as 32 bit signed long
+template <class T, class A, class B, class C, class D>
+long map(T _x, A _in_min, B _in_max, C _out_min, D _out_max, typename std::enable_if<std::is_integral<T>::value >::type* = 0)
+{
+	long x = _x, in_min = _in_min, in_max = _in_max, out_min = _out_min, out_max = _out_max;
+	// Arduino's traditional algorithm
+	//return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+	// st42's suggestion: https://github.com/arduino/Arduino/issues/2466#issuecomment-69873889
+	// more conversation:
+	// https://forum.pjrc.com/threads/44503-map()-function-improvements
+	if ((in_max - in_min) > (out_max - out_min)) {
+		return (x - in_min) * (out_max - out_min+1) / (in_max - in_min+1) + out_min;
+	} else {
+		return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+	}
+}
+// when the input is a float or double, do all math using the input's type
+template <class T, class A, class B, class C, class D>
+T map(T x, A in_min, B in_max, C out_min, D out_max, typename std::enable_if<std::is_floating_point<T>::value >::type* = 0)
+{
+	return (x - (T)in_min) * ((T)out_max - (T)out_min) / ((T)in_max - (T)in_min) + (T)out_min;
+}
+#include <algorithm> // c++ min, max
+#include <utility>
+// https://forum.pjrc.com/threads/44596-Teensyduino-1-37-Beta-2-(Arduino-1-8-3-support)?p=145150&viewfull=1#post145150
+template<class A, class B>
+constexpr auto min(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::forward<B>(b)) {
+  return a < b ? std::forward<A>(a) : std::forward<B>(b);
+}
+template<class A, class B>
+constexpr auto max(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::forward<B>(b)) {
+  return a >= b ? std::forward<A>(a) : std::forward<B>(b);
+}
+#else // not C++
+#define min(a, b) ({ \
+  typeof(a) _a = (a); \
+  typeof(b) _b = (b); \
+  (_a < _b) ? _a : _b; \
+})
+#define max(a, b) ({ \
+  typeof(a) _a = (a); \
+  typeof(b) _b = (b); \
+  (_a > _b) ? _a : _b; \
+})
 #endif
+
 
 #ifdef PI
 #undef PI
@@ -64,16 +117,6 @@ extern "C"{
 #define typeof(a) decltype(a)
 #endif
 
-#define min(a, b) ({ \
-  typeof(a) _a = (a); \
-  typeof(b) _b = (b); \
-  (_a < _b) ? _a : _b; \
-})
-#define max(a, b) ({ \
-  typeof(a) _a = (a); \
-  typeof(b) _b = (b); \
-  (_a > _b) ? _a : _b; \
-})
 #define abs(x) ({ \
   typeof(x) _x = (x); \
   (_x > 0) ? _x : -_x; \
@@ -94,6 +137,20 @@ extern "C"{
   typeof(x) _x = (x); \
   _x * _x; \
 })
+
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+extern double exp10(double x);
+extern float exp10f(float x);
+extern long double exp10l(long double x);
+extern double pow10(double x);
+extern float pow10f(float x);
+extern long double pow10l(long double x);
+
+#define stricmp(a, b) strcasecmp(a, b)
+
 #define sei() __enable_irq()
 #define cli() __disable_irq()
 #define interrupts() __enable_irq()
@@ -119,12 +176,6 @@ typedef uint8_t byte;
 
 uint32_t pulseIn(uint8_t pin, uint8_t state, uint32_t timeout);
 void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, byte val);
-
-//void tone(uint8_t pin, uint16_t frequency, uint32_t duration);
-//void noTone(uint8_t pin);
-
-//void attachInterrupt(uint8_t, void (*)(void), uint8_t mode);
-//void detachInterrupt(uint8_t);
 
 void setup(void);
 void loop(void);
