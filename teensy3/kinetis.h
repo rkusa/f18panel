@@ -2795,6 +2795,8 @@ typedef struct {
 
 // Random Number Generator Accelerator (RNGA)
 
+// For info about using RNGA and the quality of its results:
+// https://forum.pjrc.com/threads/48745-Teensy-3-6-Random-Number-Generator
 #define RNG_CR			(*(volatile uint32_t *)0x40029000) // RNGA Control Register
 #define RNG_SR			(*(volatile uint32_t *)0x40029004) // RNGA Status Register
 #define RNG_ER			(*(volatile uint32_t *)0x40029008) // RNGA Entropy Register
@@ -4366,7 +4368,7 @@ typedef struct {
 #define SPI_MCR_FRZ			((uint32_t)0x08000000)		//
 #define SPI_MCR_MTFE			((uint32_t)0x04000000)		//
 #define SPI_MCR_ROOE			((uint32_t)0x01000000)		//
-#define SPI_MCR_PCSIS(n)		(((n) & 0x1F) << 16)		//
+#define SPI_MCR_PCSIS(n)		(((n) & 0x3F) << 16)		//
 #define SPI_MCR_DOZE			((uint32_t)0x00008000)		//
 #define SPI_MCR_MDIS			((uint32_t)0x00004000)		//
 #define SPI_MCR_DIS_TXF			((uint32_t)0x00002000)		//
@@ -4414,7 +4416,7 @@ typedef struct {
 #define SPI_PUSHR_CTAS(n)		(((n) & 7) << 28)		//
 #define SPI_PUSHR_EOQ			((uint32_t)0x08000000)		//
 #define SPI_PUSHR_CTCNT			((uint32_t)0x04000000)		//
-#define SPI_PUSHR_PCS(n)		(((n) & 31) << 16)		//
+#define SPI_PUSHR_PCS(n)		(((n) & 0x3f) << 16)		//
 #define SPI0_PUSHR_SLAVE	(KINETISK_SPI0.PUSHR)	// DSPI PUSH TX FIFO Register In Slave Mode
 #define SPI0_POPR		(KINETISK_SPI0.POPR)	// DSPI POP RX FIFO Register
 #define SPI0_TXFR0		(KINETISK_SPI0.TXFR[0])	// DSPI Transmit FIFO Registers

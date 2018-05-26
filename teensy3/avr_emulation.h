@@ -884,16 +884,31 @@ public:
 			uint32_t ctar = SPI0_CTAR0;
 			if (val & (1<<DORD)) ctar |= SPI_CTAR_LSBFE; // TODO: use bitband
 			if (val & (1<<CPOL)) ctar |= SPI_CTAR_CPOL;
-			if ((val & 3) == 1) {
-				// TODO: implement - is this ever really needed
-			} else if ((val & 3) == 2) {
-				// TODO: implement - is this ever really needed
-			} else if ((val & 3) == 3) {
-				// TODO: implement - is this ever really needed
-			}
 			if (val & (1<<CPHA) && !(ctar & SPI_CTAR_CPHA)) {
 				ctar |= SPI_CTAR_CPHA;
-				// TODO: clear SPI_CTAR_CSSCK, set SPI_CTAR_ASC
+				ctar &= 0xFFFF00FF;
+				ctar |= SPI_CTAR_ASC(ctar & 15);
+			}
+			if ((val & 3) != 0) {
+				uint32_t br = ctar & 15;
+				uint32_t priorval;
+				if (br <= 1) priorval = 0;
+				else if (br <= 4) priorval = 1;
+				else if (br <= 6) priorval = 2;
+				else priorval = 3;
+				uint32_t newval = priorval | (val & 3);
+				if (newval != priorval) {
+					if (newval == 0) br = 1;
+					else if (newval == 0) br = 4;
+					else if (newval == 0) br = 6;
+					else br = 7;
+					ctar &= 0xFFFF00F0; // clear BR, ASC, CSSCK
+					if ((ctar & SPI_CTAR_CPHA)) {
+						ctar |= SPI_CTAR_BR(br) | SPI_CTAR_ASC(br);
+					} else {
+						ctar |= SPI_CTAR_BR(br) | SPI_CTAR_CSSCK(br);
+					}
+				}
 			}
 			update_ctar(ctar);
 		}
@@ -922,16 +937,31 @@ public:
 			uint32_t ctar = SPI0_CTAR0;
 			if (!(val & (1<<DORD))) ctar &= ~SPI_CTAR_LSBFE; // TODO: use bitband
 			if (!(val & (1<<CPOL))) ctar &= ~SPI_CTAR_CPOL;
-			if ((val & 3) == 0) {
-				// TODO: implement - is this ever really needed
-			} else if ((val & 3) == 1) {
-				// TODO: implement - is this ever really needed
-			} else if ((val & 3) == 2) {
-				// TODO: implement - is this ever really needed
-			}
 			if (!(val & (1<<CPHA)) && (ctar & SPI_CTAR_CPHA)) {
 				ctar &= ~SPI_CTAR_CPHA;
-				// TODO: set SPI_CTAR_ASC, clear SPI_CTAR_CSSCK
+				ctar &= 0xFFFF00FF;
+				ctar |= SPI_CTAR_CSSCK(ctar & 15);
+			}
+			if ((val & 3) != 3) {
+				uint32_t br = ctar & 15;
+				uint32_t priorval;
+				if (br <= 1) priorval = 0;
+				else if (br <= 4) priorval = 1;
+				else if (br <= 6) priorval = 2;
+				else priorval = 3;
+				uint32_t newval = priorval & (val & 3);
+				if (newval != priorval) {
+					if (newval == 0) br = 1;
+					else if (newval == 0) br = 4;
+					else if (newval == 0) br = 6;
+					else br = 7;
+					ctar &= 0xFFFF00F0; // clear BR, ASC, CSSCK
+					if ((ctar & SPI_CTAR_CPHA)) {
+						ctar |= SPI_CTAR_BR(br) | SPI_CTAR_ASC(br);
+					} else {
+						ctar |= SPI_CTAR_BR(br) | SPI_CTAR_CSSCK(br);
+					}
+				}
 			}
 			update_ctar(ctar);
 		}
@@ -947,20 +977,19 @@ public:
 		if ((val & (1<<DORD)) && (SPI0_CTAR0 & SPI_CTAR_LSBFE)) ret |= (1<<DORD);
 		if ((val & (1<<CPOL)) && (SPI0_CTAR0 & SPI_CTAR_CPOL)) ret |= (1<<CPOL);
 		if ((val & (1<<CPHA)) && (SPI0_CTAR0 & SPI_CTAR_CPHA)) ret |= (1<<CPHA);
-		if ((val & 3) == 3) {
+		if ((val & 3) != 0) {
 			uint32_t dbr = SPI0_CTAR0 & 15;
+			uint32_t spr10;
 			if (dbr <= 1) {
+				spr10 = 0;
 			} else if (dbr <= 4) {
-				ret |= (1<<SPR0);
+				spr10 |= (1<<SPR0);
 			} else if (dbr <= 6) {
-				ret |= (1<<SPR1);
+				spr10 |= (1<<SPR1);
 			} else {
-				ret |= (1<<SPR1)|(1<<SPR0);
+				spr10 |= (1<<SPR1)|(1<<SPR0);
 			}
-		} else if ((val & 3) == 1) {
-			// TODO: implement - is this ever really needed
-		} else if ((val & 3) == 2) {
-			// TODO: implement - is this ever really needed
+			ret |= spr10 & (val & 3);
 		}
 		if (val & (1<<SPE) && (!(SPI0_MCR & SPI_MCR_MDIS))) ret |= (1<<SPE);
 		if (val & (1<<MSTR) && (SPI0_MCR & SPI_MCR_MSTR)) ret |= (1<<MSTR);
@@ -1028,6 +1057,16 @@ public:
 		pinout = newpinout;
 #endif
 	}
+	inline void setMOSI_soft(uint8_t pin) __attribute__((always_inline)) {
+#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
+		if (pin == 11) pinout &= ~3;
+		if (pin == 7)  pinout = (pinout & ~0x3) | 1;
+		if (pin == 28) pinout = (pinout & ~0x3) | 2;
+#else
+		if (pin == 11) pinout &= ~1;
+		if (pin == 7)  pinout |= 1;
+#endif
+	}
 	inline void setMISO(uint8_t pin) __attribute__((always_inline)) {
 #if defined(__MK64FX512__) || defined(__MK66FX1M0__)
 		uint8_t newpinout = pinout;
@@ -1065,6 +1104,16 @@ public:
 		pinout = newpinout;
 #endif
 	}
+	inline void setMISO_soft(uint8_t pin) __attribute__((always_inline)) {
+#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
+		if (pin == 12) pinout &= ~0xc;
+		if (pin == 8)  pinout = (pinout & ~0xc) | 4;
+		if (pin == 39) pinout = (pinout & ~0xc) | 8;
+#else
+		if (pin == 12) pinout &= ~2;
+		if (pin == 8)  pinout |= 2;
+#endif
+	}
 	inline void setSCK(uint8_t pin) __attribute__((always_inline)) {
 #if defined(__MK64FX512__) || defined(__MK66FX1M0__)
 		uint8_t newpinout = pinout;
@@ -1100,6 +1149,16 @@ public:
 			}
 		}
 		pinout = newpinout;
+#endif
+	}
+	inline void setSCK_soft(uint8_t pin) __attribute__((always_inline)) {
+#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
+		if (pin == 13) pinout &= ~0x30;
+		if (pin == 14) pinout = (pinout & ~0x30) | 0x10;
+		if (pin == 27) pinout = (pinout & ~0x30) | 0x20;
+#else
+		if (pin == 13) pinout &= ~4;
+		if (pin == 14) pinout |= 4;
 #endif
 	}
 	friend class SPSRemulation;
