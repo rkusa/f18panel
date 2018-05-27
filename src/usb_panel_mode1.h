@@ -41,6 +41,10 @@ public:
     usb_panel_mode1_send();
   }
 
+  void reset(void) {
+    memset(usb_panel_mode1_data, 0, sizeof(usb_panel_mode1_data));
+  }
+
 private:
   static uint8_t manual_mode;
   static uint8_t interface;
