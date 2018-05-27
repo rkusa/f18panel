@@ -1,3 +1,38 @@
+
+
+
+
+
+Dependencies
+
+```
+brew install teensy_loader_cli
+```
+
+
+Deploy
+
+```
+teensy_loader_cli --mcu=mk20dx256 teensy.hex
+
+or
+
+make upload
+```
+
+Connect to serial
+
+```
+screen /dev/tty.usbmodem2470841 9600
+```
+
+
+
+
+
+
+
+
 Teensy 3.X Project Template
 ===========================
 

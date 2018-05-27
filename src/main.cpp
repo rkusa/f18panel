@@ -4,40 +4,30 @@
 const int mode1Pin = 23;
 const int mode3Pin = 22;
 
-const int column1Pin = 11;
-const int column2Pin = 10;
-const int column3Pin = 9;
-const int column4Pin = 8;
-const int column5Pin = 7;
-const int column6Pin = 6;
-const int column7Pin = 5;
-
-const int row1Pin = 14;
-const int row2Pin = 15;
-const int row3Pin = 16;
-const int row4Pin = 17;
-const int row5Pin = 18;
-const int row6Pin = 19;
-
 Bounce mode1Button = Bounce(mode1Pin, 10);
 Bounce mode3Button = Bounce(mode3Pin, 10);
 
-Bounce column1 = Bounce(column1Pin, 10);
-Bounce column2 = Bounce(column2Pin, 10);
-Bounce column3 = Bounce(column3Pin, 10);
-Bounce column4 = Bounce(column4Pin, 10);
-Bounce column5 = Bounce(column5Pin, 10);
-Bounce column6 = Bounce(column6Pin, 10);
-Bounce column7 = Bounce(column7Pin, 10);
+const byte COLS = 7;
+const byte ROWS = 6;
 
-Bounce row1 = Bounce(row1Pin, 10);
-Bounce row2 = Bounce(row2Pin, 10);
-Bounce row3 = Bounce(row3Pin, 10);
-Bounce row4 = Bounce(row4Pin, 10);
-Bounce row5 = Bounce(row5Pin, 10);
-Bounce row6 = Bounce(row6Pin, 10);
+const int columnPins[COLS] = {
+  11,
+  10,
+  9,
+  8,
+  7,
+  6,
+  5,
+};
 
-#define PRESSED   1
+const int rowPins[ROWS] = {
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+};
 
 const int com1PressButton = 21;
 const int com1LeftRotateButton = 22;
@@ -49,6 +39,86 @@ const int kneeboardPressButton = 27;
 const int kneeboardLeftRotateButton = 28;
 const int kneeboardRightRotateButton = 29;
 
+struct KeyAction {
+  int primary;
+  int secondary;
+};
+
+struct Action
+{
+    enum { None, Button, Key } kind;
+    union {
+      int unsigned button;
+      KeyAction key;
+    };
+};
+
+Action actions[COLS][ROWS] = {
+  // Column 1
+  {
+    {Action::None, 0},
+    {Action::Button, 1},
+    {Action::Button, 2},
+    {Action::Button, 3},
+    {Action::Button, 4},
+    {Action::Button, 5},
+  },
+  // Column 2
+  {
+    {Action::Button, 20},
+    {Action::Key, {.key = KeyAction{KEY_DELETE, KEY_DELETE}}},
+    {Action::Key, {.key = KeyAction{KEY_F7, KEYPAD_7}}},
+    {Action::Key, {.key = KeyAction{KEY_F4, KEYPAD_4}}},
+    {Action::Key, {.key = KeyAction{KEY_F1, KEYPAD_1}}},
+    {Action::Button, 6},
+  },
+  // Column 3
+  {
+    {Action::Button, 19},
+    {Action::Key, {.key = KeyAction{KEY_F10, KEYPAD_0}}},
+    {Action::Key, {.key = KeyAction{KEY_F8, KEYPAD_8}}},
+    {Action::Key, {.key = KeyAction{KEY_F5, KEYPAD_5}}},
+    {Action::Key, {.key = KeyAction{KEY_F2, KEYPAD_2}}},
+    {Action::Button, 7},
+  },
+  // Column 4
+  {
+    {Action::Button, 18},
+    {Action::Key, {.key = KeyAction{KEYPAD_ENTER, KEYPAD_ENTER}}},
+    {Action::Key, {.key = KeyAction{KEY_F9, KEYPAD_9}}},
+    {Action::Key, {.key = KeyAction{KEY_F6, KEYPAD_6}}},
+    {Action::Key, {.key = KeyAction{KEY_F3, KEYPAD_3}}},
+    {Action::Button, 8},
+  },
+  // Column 4
+  {
+    {Action::Button, 17},
+    {Action::Button, kneeboardPressButton},
+    {Action::Button, com1RightRotateButton},
+    {Action::Button, com1LeftRotateButton},
+    {Action::Button, com1PressButton},
+    {Action::Button, 9},
+  },
+  // Column 5
+  {
+    {Action::Button, 16},
+    {Action::Button, kneeboardLeftRotateButton},
+    {Action::Button, com2RightRotateButton},
+    {Action::Button, com2LeftRotateButton},
+    {Action::Button, com2PressButton},
+    {Action::Button, 10},
+  },
+  // Column 6
+  {
+    {Action::Button, kneeboardRightRotateButton},
+    {Action::Button, 15},
+    {Action::Button, 14},
+    {Action::Button, 13},
+    {Action::Button, 12},
+    {Action::Button, 11},
+  },
+};
+
 void setup() {
   Serial.begin(9600);
 
@@ -57,36 +127,15 @@ void setup() {
   PanelMode3.useManualSend(true);
 
   // set pin mode for all rows and columns
-  pinMode(column1Pin, INPUT_PULLUP);
-  pinMode(column2Pin, INPUT_PULLUP);
-  pinMode(column3Pin, INPUT_PULLUP);
-  pinMode(column4Pin, INPUT_PULLUP);
-  pinMode(column5Pin, INPUT_PULLUP);
-  pinMode(column6Pin, INPUT_PULLUP);
-  pinMode(column7Pin, INPUT_PULLUP);
-  pinMode(row1Pin, INPUT_PULLUP);
-  pinMode(row2Pin, INPUT_PULLUP);
-  pinMode(row3Pin, INPUT_PULLUP);
-  pinMode(row4Pin, INPUT_PULLUP);
-  pinMode(row5Pin, INPUT_PULLUP);
-  pinMode(row6Pin, INPUT_PULLUP);
+  for (int i = 0; i < COLS; ++i) {
+    pinMode(columnPins[i], OUTPUT);
+  }
+  for (int i = 0; i < ROWS; ++i) {
+    pinMode(rowPins[i], INPUT_PULLUP);
+  }
 
   // // onboard LED
   // pinMode(13, OUTPUT);
-}
-
-const void pressButton(const unsigned int num, const unsigned int mode) {
-  switch (mode) {
-  case 1:
-    PanelMode1.button(num, PRESSED);
-    break;
-  case 2:
-    PanelMode2.button(num, PRESSED);
-    break;
-  case 3:
-    PanelMode3.button(num, PRESSED);
-    break;
-  }
 }
 
 // the loop() methor runs over and over again,
@@ -96,21 +145,7 @@ void loop() {
   PanelMode2.reset();
   PanelMode3.reset();
 
-  column1.update();
-  column2.update();
-  column3.update();
-  column4.update();
-  column5.update();
-  column6.update();
-  column7.update();
-  row1.update();
-  row2.update();
-  row3.update();
-  row4.update();
-  row5.update();
-  row6.update();
-
-  // var panel = PanelMode1;
+  mode1Button.update();
   unsigned int mode = 2;
   if (mode1Button.fallingEdge()) {
     mode = 1;
@@ -119,288 +154,53 @@ void loop() {
     mode = 3;
   }
 
-  if (column1.fallingEdge()) {
-    if (row1.fallingEdge()) {
-      // unused
-    }
+  for (auto x = 0; x < COLS; ++x) {
+    digitalWrite(columnPins[x], HIGH);
 
-    if (row2.fallingEdge()) {
-      pressButton(1, mode);
-    }
+    for (auto y = 0; y < ROWS; ++y) {
+      if (digitalRead(rowPins[y]) == LOW) { // PRESSED
+        auto action = actions[x][y];
+        switch (action.kind) {
+        case Action::None:
+          break;
+        case Action::Button:
+          char buf[50];
+          sprintf(buf, "Button %d pressed", action.button);
+          Serial.println(buf);
 
-    if (row3.fallingEdge()) {
-      pressButton(2, mode);
-    }
+          switch (mode) {
+          case 1:
+            PanelMode1.button(action.button, HIGH);
+            break;
+          case 2:
+            PanelMode2.button(action.button, HIGH);
+            break;
+          case 3:
+            PanelMode3.button(action.button, HIGH);
+            break;
+          }
 
-    if (row4.fallingEdge()) {
-      pressButton(3, mode);
-    }
+          break;
+        case Action::Key:
 
-    if (row5.fallingEdge()) {
-      pressButton(4, mode);
-    }
+          switch (mode) {
+          case 1:
+          case 3:
+            Keyboard.press(action.key.primary);
+            Keyboard.release(action.key.primary);
+            break;
+          case 2:
+            Keyboard.press(action.key.secondary);
+            Keyboard.release(action.key.secondary);
+            break;
+          }
 
-    if (row6.fallingEdge()) {
-      pressButton(5, mode);
-    }
-  }
-
-  if (column2.fallingEdge()) {
-    if (row1.fallingEdge()) {
-      pressButton(20, mode);
-    }
-
-    if (row2.fallingEdge()) {
-      Keyboard.press(KEY_DELETE);
-      Keyboard.release(KEY_DELETE);
-    }
-
-    if (row3.fallingEdge()) {
-      switch (mode) {
-      case 1:
-      case 3:
-        Keyboard.press(KEY_F7);
-        Keyboard.release(KEY_F7);
-        break;
-      case 2:
-        Keyboard.press(KEYPAD_7);
-        Keyboard.release(KEYPAD_7);
-        break;
+          break;
+        }
       }
     }
 
-    if (row4.fallingEdge()) {
-      switch (mode) {
-      case 1:
-      case 3:
-        Keyboard.press(KEY_F4);
-        Keyboard.release(KEY_F4);
-        break;
-      case 2:
-        Keyboard.press(KEYPAD_4);
-        Keyboard.release(KEYPAD_4);
-        break;
-      }
-    }
-
-    if (row5.fallingEdge()) {
-      switch (mode) {
-      case 1:
-      case 3:
-        Keyboard.press(KEY_F1);
-        Keyboard.release(KEY_F1);
-        break;
-      case 2:
-        Keyboard.press(KEYPAD_1);
-        Keyboard.release(KEYPAD_1);
-        break;
-      }
-    }
-
-    if (row6.fallingEdge()) {
-      pressButton(6, mode);
-    }
-  }
-
-  if (column3.fallingEdge()) {
-    if (row1.fallingEdge()) {
-      pressButton(19, mode);
-    }
-
-    if (row2.fallingEdge()) {
-      switch (mode) {
-      case 1:
-      case 3:
-        Keyboard.press(KEY_F10);
-        Keyboard.release(KEY_F10);
-        break;
-      case 2:
-        Keyboard.press(KEYPAD_0);
-        Keyboard.release(KEYPAD_0);
-        break;
-      }
-    }
-
-    if (row3.fallingEdge()) {
-      switch (mode) {
-      case 1:
-      case 3:
-        Keyboard.press(KEY_F8);
-        Keyboard.release(KEY_F8);
-        break;
-      case 2:
-        Keyboard.press(KEYPAD_8);
-        Keyboard.release(KEYPAD_8);
-        break;
-      }
-    }
-
-    if (row4.fallingEdge()) {
-      switch (mode) {
-      case 1:
-      case 3:
-        Keyboard.press(KEY_F5);
-        Keyboard.release(KEY_F5);
-        break;
-      case 2:
-        Keyboard.press(KEYPAD_5);
-        Keyboard.release(KEYPAD_5);
-        break;
-      }
-    }
-
-    if (row5.fallingEdge()) {
-      switch (mode) {
-      case 1:
-      case 3:
-        Keyboard.press(KEY_F2);
-        Keyboard.release(KEY_F2);
-        break;
-      case 2:
-        Keyboard.press(KEYPAD_2);
-        Keyboard.release(KEYPAD_2);
-        break;
-      }
-    }
-
-    if (row6.fallingEdge()) {
-      pressButton(7, mode);
-    }
-  }
-
-  if (column4.fallingEdge()) {
-    if (row1.fallingEdge()) {
-      pressButton(18, mode);
-    }
-
-    if (row2.fallingEdge()) {
-      Keyboard.press(KEYPAD_ENTER);
-      Keyboard.release(KEYPAD_ENTER);
-    }
-
-    if (row3.fallingEdge()) {
-      switch (mode) {
-      case 1:
-      case 3:
-        Keyboard.press(KEY_F9);
-        Keyboard.release(KEY_F9);
-        break;
-      case 2:
-        Keyboard.press(KEYPAD_9);
-        Keyboard.release(KEYPAD_9);
-        break;
-      }
-    }
-
-    if (row4.fallingEdge()) {
-      switch (mode) {
-      case 1:
-      case 3:
-        Keyboard.press(KEY_F6);
-        Keyboard.release(KEY_F6);
-        break;
-      case 2:
-        Keyboard.press(KEYPAD_6);
-        Keyboard.release(KEYPAD_6);
-        break;
-      }
-    }
-
-    if (row5.fallingEdge()) {
-      switch (mode) {
-      case 1:
-      case 3:
-        Keyboard.press(KEY_F3);
-        Keyboard.release(KEY_F3);
-        break;
-      case 2:
-        Keyboard.press(KEYPAD_3);
-        Keyboard.release(KEYPAD_3);
-        break;
-      }
-    }
-
-    if (row6.fallingEdge()) {
-      pressButton(8, mode);
-    }
-  }
-
-  if (column5.fallingEdge()) {
-    if (row1.fallingEdge()) {
-      pressButton(17, mode);
-    }
-
-    if (row2.fallingEdge()) {
-      pressButton(com1PressButton, mode);
-    }
-
-    if (row3.fallingEdge()) {
-      pressButton(com1LeftRotateButton, mode);
-    }
-
-    if (row4.fallingEdge()) {
-      pressButton(com1RightRotateButton, mode);
-    }
-
-    if (row5.fallingEdge()) {
-      pressButton(kneeboardPressButton, mode);
-    }
-
-    if (row6.fallingEdge()) {
-      pressButton(9, mode);
-    }
-  }
-
-  if (column6.fallingEdge()) {
-    if (row1.fallingEdge()) {
-      pressButton(16, mode);
-    }
-
-    if (row2.fallingEdge()) {
-      pressButton(com2PressButton, mode);
-    }
-
-    if (row3.fallingEdge()) {
-      pressButton(com2LeftRotateButton, mode);
-    }
-
-    if (row4.fallingEdge()) {
-      pressButton(com2RightRotateButton, mode);
-    }
-
-    if (row5.fallingEdge()) {
-      pressButton(kneeboardLeftRotateButton, mode);
-    }
-
-    if (row6.fallingEdge()) {
-      pressButton(10, mode);
-    }
-  }
-
-  if (column7.fallingEdge()) {
-    if (row1.fallingEdge()) {
-      pressButton(kneeboardRightRotateButton, mode);
-    }
-
-    if (row2.fallingEdge()) {
-      pressButton(15, mode);
-    }
-
-    if (row3.fallingEdge()) {
-      pressButton(14, mode);
-    }
-
-    if (row4.fallingEdge()) {
-      pressButton(13, mode);
-    }
-
-    if (row5.fallingEdge()) {
-      pressButton(12, mode);
-    }
-
-    if (row6.fallingEdge()) {
-      pressButton(11, mode);
-    }
+    digitalWrite(columnPins[x], LOW);
   }
 
   // send current button states

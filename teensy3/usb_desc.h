@@ -152,8 +152,8 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define PRODUCT_NAME_LEN      9
   #define EP0_SIZE              64 // packet size we will send
 
-  #define NUM_ENDPOINTS   7
-  #define NUM_INTERFACE   5
+  #define NUM_ENDPOINTS   9
+  #define NUM_INTERFACE   7
   #define NUM_USB_BUFFERS 30
 
   #define CDC_IAD_DESCRIPTOR    1
@@ -180,6 +180,15 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define PANEL_MODE3_INTERFACE    4
   #define PANEL_MODE3_SIZE         4
   #define PANEL_MODE3_INTERVAL     1
+
+  #define KEYBOARD_INTERFACE       5
+  #define KEYBOARD_ENDPOINT        7
+  #define KEYBOARD_SIZE            8
+  #define KEYBOARD_INTERVAL        1
+  #define KEYMEDIA_INTERFACE       6
+  #define KEYMEDIA_ENDPOINT        8
+  #define KEYMEDIA_SIZE            8
+  #define KEYMEDIA_INTERVAL        4
 
   #define ENDPOINT2_CONFIG  ENDPOINT_TRANSIMIT_ONLY
   #define ENDPOINT3_CONFIG  ENDPOINT_RECEIVE_ONLY
