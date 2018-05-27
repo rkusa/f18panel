@@ -68,6 +68,21 @@ usb_joystick_class Joystick;
 uint8_t usb_joystick_class::manual_mode = 0;
 #endif
 
+#ifdef PANEL_MODE1_INTERFACE
+usb_panel_mode1_class PanelMode1;
+uint8_t usb_panel_mode1_class::manual_mode = 0;
+#endif
+
+#ifdef PANEL_MODE2_INTERFACE
+usb_panel_mode2_class PanelMode2;
+uint8_t usb_panel_mode2_class::manual_mode = 0;
+#endif
+
+#ifdef PANEL_MODE3_INTERFACE
+usb_panel_mode3_class PanelMode3;
+uint8_t usb_panel_mode3_class::manual_mode = 0;
+#endif
+
 #ifdef USB_DISABLED
 usb_serial_class Serial;
 #endif

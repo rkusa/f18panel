@@ -140,6 +140,54 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define ENDPOINT3_CONFIG	ENDPOINT_RECEIVE_ONLY
   #define ENDPOINT4_CONFIG	ENDPOINT_TRANSIMIT_ONLY
 
+#elif defined(USB_PANEL)
+  #define VENDOR_ID             0x2626
+  #define PRODUCT_ID            0x0001
+  #define DEVICE_CLASS          0xEF
+  #define DEVICE_SUBCLASS       0x02
+  #define DEVICE_PROTOCOL       0x01
+  #define MANUFACTURER_NAME     {'M','A','R','K','U','S',' ','A','S','T'}
+  #define MANUFACTURER_NAME_LEN 19
+  #define PRODUCT_NAME          {'F','1','8',' ','P','a','n','e','l'}
+  #define PRODUCT_NAME_LEN      9
+  #define EP0_SIZE              64 // packet size we will send
+
+  #define NUM_ENDPOINTS   7
+  #define NUM_INTERFACE   5
+  #define NUM_USB_BUFFERS 30
+
+  #define CDC_IAD_DESCRIPTOR    1
+  #define CDC_STATUS_INTERFACE  0
+  #define CDC_DATA_INTERFACE    1 // Serial
+  #define CDC_ACM_ENDPOINT      1
+  #define CDC_RX_ENDPOINT       2
+  #define CDC_TX_ENDPOINT       3
+  #define CDC_ACM_SIZE          16
+  #define CDC_RX_SIZE           64
+  #define CDC_TX_SIZE           64
+
+  #define PANEL_MODE1_ENDPOINT     4
+  #define PANEL_MODE1_INTERFACE    2
+  #define PANEL_MODE1_SIZE         4
+  #define PANEL_MODE1_INTERVAL     1
+
+  #define PANEL_MODE2_ENDPOINT     5
+  #define PANEL_MODE2_INTERFACE    3
+  #define PANEL_MODE2_SIZE         4
+  #define PANEL_MODE2_INTERVAL     1
+
+  #define PANEL_MODE3_ENDPOINT     6
+  #define PANEL_MODE3_INTERFACE    4
+  #define PANEL_MODE3_SIZE         4
+  #define PANEL_MODE3_INTERVAL     1
+
+  #define ENDPOINT2_CONFIG  ENDPOINT_TRANSIMIT_ONLY
+  #define ENDPOINT3_CONFIG  ENDPOINT_RECEIVE_ONLY
+  #define ENDPOINT4_CONFIG  ENDPOINT_TRANSIMIT_ONLY
+  #define ENDPOINT5_CONFIG  ENDPOINT_TRANSIMIT_ONLY
+  #define ENDPOINT6_CONFIG  ENDPOINT_TRANSIMIT_ONLY
+  #define ENDPOINT7_CONFIG  ENDPOINT_TRANSIMIT_ONLY
+
 #elif defined(USB_KEYBOARDONLY)
   #define VENDOR_ID		0x16C0
   #define PRODUCT_ID		0x04D0

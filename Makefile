@@ -12,7 +12,8 @@ TEENSY_CORE_SPEED = 48000000
 #ARDUINO = 10600
 
 # configurable options
-OPTIONS = -DUSB_SERIAL -DF_CPU=96000000 -DLAYOUT_US_ENGLISH
+OPTIONS = -DUSB_PANEL -DF_CPU=96000000 -DLAYOUT_US_ENGLISH
+# OPTIONS = -DUSB_SERIAL -DF_CPU=$(TEENSY_CORE_SPEED) -DLAYOUT_US_ENGLISH
 # OPTIONS = -DF_CPU=96000000 -DUSB_KEYBOARDONLY -DLAYOUT_US_ENGLISH
 
 # directory to build in
@@ -50,7 +51,7 @@ COMPILERPATH = $(TOOLSPATH)/arm/bin
 #************************************************************************
 
 # CPPFLAGS = compiler options for C and C++
-CPPFLAGS = -Wall -g -Os -mthumb -ffunction-sections -fdata-sections -nostdlib -MMD $(OPTIONS) -DTEENSYDUINO=124 -DF_CPU=$(TEENSY_CORE_SPEED) -Isrc -I$(COREPATH)
+CPPFLAGS = -Wall -g -Os -mthumb -ffunction-sections -fdata-sections -nostdlib -MMD $(OPTIONS) -DTEENSYDUINO=124-Isrc -Isrc -I$(COREPATH)
 
 # compiler options for C++ only
 CXXFLAGS = -std=gnu++0x -felide-constructors -fno-exceptions -fno-rtti

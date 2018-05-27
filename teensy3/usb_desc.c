@@ -111,6 +111,23 @@ static uint8_t device_descriptor[] = {
 // Each HID interface needs a special report descriptor that tells
 // the meaning and format of the data.
 
+// #ifdef PANEL_MODE1_INTERFACE
+static uint8_t panel_report_desc[] = {
+    0x05, 0x01,                 // USAGE_PAGE (Generic Desktop)
+    0x09, 0x04,                 // USAGE (Joystick)
+    0xa1, 0x01,                 // COLLECTION (Application)
+    0x05, 0x09,                 //   Usage Page (Button)
+    0x15, 0x00,                 //   Logical Minimum (0)
+    0x25, 0x01,                 //   Logical Maximum (1)
+    0x75, 0x01,                 //   Report Size (1)
+    0x95, 0x20,                 //   Report Count (32) 32 bytes, to be byte-aligned
+    0x19, 0x01,                 //   Usage Minimum (Button #1)
+    0x29, 29,                   //   Usage Maximum (Button #29)
+    0x81, 0x02,                 //   Input (variable,absolute)
+    0xc0                        // END_COLLECTION
+};
+// #endif
+
 #ifdef KEYBOARD_INTERFACE
 // Keyboard Protocol 1, HID 1.11 spec, Appendix B, page 59-60
 static uint8_t keyboard_report_desc[] = {
@@ -554,15 +571,39 @@ static uint8_t flightsim_report_desc[] = {
 #define AUDIO_INTERFACE_DESC_SIZE	0
 #endif
 
-#define MULTITOUCH_INTERFACE_DESC_POS	AUDIO_INTERFACE_DESC_POS+AUDIO_INTERFACE_DESC_SIZE
+#define MULTITOUCH_INTERFACE_DESC_POS   AUDIO_INTERFACE_DESC_POS+AUDIO_INTERFACE_DESC_SIZE
 #ifdef  MULTITOUCH_INTERFACE
-#define MULTITOUCH_INTERFACE_DESC_SIZE	9+9+7
-#define MULTITOUCH_HID_DESC_OFFSET	MULTITOUCH_INTERFACE_DESC_POS+9
+#define MULTITOUCH_INTERFACE_DESC_SIZE  9+9+7
+#define MULTITOUCH_HID_DESC_OFFSET  MULTITOUCH_INTERFACE_DESC_POS+9
 #else
-#define MULTITOUCH_INTERFACE_DESC_SIZE	0
+#define MULTITOUCH_INTERFACE_DESC_SIZE  0
 #endif
 
-#define CONFIG_DESC_SIZE		MULTITOUCH_INTERFACE_DESC_POS+MULTITOUCH_INTERFACE_DESC_SIZE
+#define PANEL_MODE1_INTERFACE_DESC_POS  MULTITOUCH_INTERFACE_DESC_POS+MULTITOUCH_INTERFACE_DESC_SIZE
+#ifdef  PANEL_MODE1_INTERFACE
+#define PANEL_MODE1_INTERFACE_DESC_SIZE 9+9+7
+#define PANEL_MODE1_HID_DESC_OFFSET PANEL_MODE1_INTERFACE_DESC_POS+9
+#else
+#define PANEL_MODE1_INTERFACE_DESC_SIZE 0
+#endif
+
+#define PANEL_MODE2_INTERFACE_DESC_POS  PANEL_MODE1_INTERFACE_DESC_POS+PANEL_MODE1_INTERFACE_DESC_SIZE
+#ifdef  PANEL_MODE2_INTERFACE
+#define PANEL_MODE2_INTERFACE_DESC_SIZE 9+9+7
+#define PANEL_MODE2_HID_DESC_OFFSET PANEL_MODE2_INTERFACE_DESC_POS+9
+#else
+#define PANEL_MODE2_INTERFACE_DESC_SIZE 0
+#endif
+
+#define PANEL_MODE3_INTERFACE_DESC_POS	PANEL_MODE2_INTERFACE_DESC_POS+PANEL_MODE2_INTERFACE_DESC_SIZE
+#ifdef  PANEL_MODE3_INTERFACE
+#define PANEL_MODE3_INTERFACE_DESC_SIZE	9+9+7
+#define PANEL_MODE3_HID_DESC_OFFSET	PANEL_MODE3_INTERFACE_DESC_POS+9
+#else
+#define PANEL_MODE3_INTERFACE_DESC_SIZE	0
+#endif
+
+#define CONFIG_DESC_SIZE		PANEL_MODE3_INTERFACE_DESC_POS+PANEL_MODE3_INTERFACE_DESC_SIZE
 
 
 
@@ -1391,6 +1432,93 @@ static uint8_t config_descriptor[CONFIG_DESC_SIZE] = {
         MULTITOUCH_SIZE, 0,                     // wMaxPacketSize
         1,                                      // bInterval
 #endif // KEYMEDIA_INTERFACE
+
+#ifdef PANEL_MODE1_INTERFACE
+        // interface descriptor, USB spec 9.6.5, page 267-269, Table 9-12
+        9,                                    // bLength
+        4,                                    // bDescriptorType
+        PANEL_MODE1_INTERFACE,                    // bInterfaceNumber
+        0,                                    // bAlternateSetting
+        1,                                    // bNumEndpoints
+        0x03,                                  // bInterfaceClass (0x03 = HID)
+        0x00,                                  // bInterfaceSubClass
+        0x00,                                  // bInterfaceProtocol
+        0,                                    // iInterface
+        // HID interface descriptor, HID 1.11 spec, section 6.2.1
+        9,                                    // bLength
+        0x21,                                  // bDescriptorType
+        0x11, 0x01,                          // bcdHID
+        0,                                    // bCountryCode
+        1,                                    // bNumDescriptors
+        0x22,                                  // bDescriptorType
+        LSB(sizeof(panel_report_desc)),        // wDescriptorLength
+        MSB(sizeof(panel_report_desc)),
+        // endpoint descriptor, USB spec 9.6.6, page 269-271, Table 9-13
+        7,                                    // bLength
+        5,                                    // bDescriptorType
+        PANEL_MODE1_ENDPOINT | 0x80,            // bEndpointAddress
+        0x03,                                  // bmAttributes (0x03=intr)
+        PANEL_MODE1_SIZE, 0,                    // wMaxPacketSize
+        PANEL_MODE1_INTERVAL,                      // bInterval
+#endif // PANEL_MODE1_INTERFACE
+
+#ifdef PANEL_MODE2_INTERFACE
+        // interface descriptor, USB spec 9.6.5, page 267-269, Table 9-12
+        9,                                    // bLength
+        4,                                    // bDescriptorType
+        PANEL_MODE2_INTERFACE,                    // bInterfaceNumber
+        0,                                    // bAlternateSetting
+        1,                                    // bNumEndpoints
+        0x03,                                  // bInterfaceClass (0x03 = HID)
+        0x00,                                  // bInterfaceSubClass
+        0x00,                                  // bInterfaceProtocol
+        0,                                    // iInterface
+        // HID interface descriptor, HID 1.11 spec, section 6.2.1
+        9,                                    // bLength
+        0x21,                                  // bDescriptorType
+        0x11, 0x01,                          // bcdHID
+        0,                                    // bCountryCode
+        1,                                    // bNumDescriptors
+        0x22,                                  // bDescriptorType
+        LSB(sizeof(panel_report_desc)),        // wDescriptorLength
+        MSB(sizeof(panel_report_desc)),
+        // endpoint descriptor, USB spec 9.6.6, page 269-271, Table 9-13
+        7,                                    // bLength
+        5,                                    // bDescriptorType
+        PANEL_MODE2_ENDPOINT | 0x80,            // bEndpointAddress
+        0x03,                                  // bmAttributes (0x03=intr)
+        PANEL_MODE2_SIZE, 0,                    // wMaxPacketSize
+        PANEL_MODE2_INTERVAL,                      // bInterval
+#endif // PANEL_MODE2_INTERFACE
+
+#ifdef PANEL_MODE3_INTERFACE
+        // interface descriptor, USB spec 9.6.5, page 267-269, Table 9-12
+        9,                                    // bLength
+        4,                                    // bDescriptorType
+        PANEL_MODE3_INTERFACE,                    // bInterfaceNumber
+        0,                                    // bAlternateSetting
+        1,                                    // bNumEndpoints
+        0x03,                                  // bInterfaceClass (0x03 = HID)
+        0x00,                                  // bInterfaceSubClass
+        0x00,                                  // bInterfaceProtocol
+        0,                                    // iInterface
+        // HID interface descriptor, HID 1.11 spec, section 6.2.1
+        9,                                    // bLength
+        0x21,                                  // bDescriptorType
+        0x11, 0x01,                          // bcdHID
+        0,                                    // bCountryCode
+        1,                                    // bNumDescriptors
+        0x22,                                  // bDescriptorType
+        LSB(sizeof(panel_report_desc)),        // wDescriptorLength
+        MSB(sizeof(panel_report_desc)),
+        // endpoint descriptor, USB spec 9.6.6, page 269-271, Table 9-13
+        7,                                    // bLength
+        5,                                    // bDescriptorType
+        PANEL_MODE3_ENDPOINT | 0x80,            // bEndpointAddress
+        0x03,                                  // bmAttributes (0x03=intr)
+        PANEL_MODE3_SIZE, 0,                    // wMaxPacketSize
+        PANEL_MODE3_INTERVAL,                      // bInterval
+#endif // PANEL_MODE3_INTERFACE
 };
 
 
@@ -1522,6 +1650,18 @@ const usb_descriptor_list_t usb_descriptor_list[] = {
 #ifdef MULTITOUCH_INTERFACE
         {0x2200, MULTITOUCH_INTERFACE, multitouch_report_desc, sizeof(multitouch_report_desc)},
         {0x2100, MULTITOUCH_INTERFACE, config_descriptor+MULTITOUCH_HID_DESC_OFFSET, 9},
+#endif
+#ifdef PANEL_MODE1_INTERFACE
+        {0x2200, PANEL_MODE1_INTERFACE, panel_report_desc, sizeof(panel_report_desc)},
+        {0x2100, PANEL_MODE1_INTERFACE, config_descriptor+PANEL_MODE1_HID_DESC_OFFSET, 9},
+#endif
+#ifdef PANEL_MODE2_INTERFACE
+        {0x2200, PANEL_MODE2_INTERFACE, panel_report_desc, sizeof(panel_report_desc)},
+        {0x2100, PANEL_MODE2_INTERFACE, config_descriptor+PANEL_MODE2_HID_DESC_OFFSET, 9},
+#endif
+#ifdef PANEL_MODE3_INTERFACE
+        {0x2200, PANEL_MODE3_INTERFACE, panel_report_desc, sizeof(panel_report_desc)},
+        {0x2100, PANEL_MODE3_INTERFACE, config_descriptor+PANEL_MODE3_HID_DESC_OFFSET, 9},
 #endif
 #ifdef MTP_INTERFACE
 	{0x0304, 0x0409, (const uint8_t *)&usb_string_mtp, 0},
