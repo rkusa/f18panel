@@ -7,7 +7,7 @@
 #ifdef PANEL_MODE2_INTERFACE // defined by usb_dev.h -> usb_desc.h
 #if F_CPU >= 20000000
 
-uint8_t usb_panel_mode2_data[4];
+uint32_t usb_panel_mode2_data[1];
 
 // Maximum number of transmit packets to queue so we don't starve other endpoints for memory
 #define TX_PACKET_LIMIT 3

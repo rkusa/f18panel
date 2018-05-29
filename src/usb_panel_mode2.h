@@ -12,7 +12,7 @@
 extern "C" {
 #endif
   int usb_panel_mode2_send(void);
-  extern uint8_t usb_panel_mode2_data[4];
+  extern uint32_t usb_panel_mode2_data[1];
 #ifdef __cplusplus
 }
 #endif
@@ -25,12 +25,10 @@ public:
   void begin(void) { }
   void end(void) { }
 
-  void button(unsigned int num, bool val) {
-    if (--num >= 87) return;
-    uint8_t *p = usb_panel_mode2_data + (num >> 5);
-    num &= 0x1F;
-    if (val) *p |= (1 << num);
-    else *p &= ~(1 << num);
+  void button(unsigned int button, bool val) {
+    if (--button >= 29) return;
+    if (val) usb_panel_mode2_data[0] |= (1 << button);
+    else usb_panel_mode2_data[0] &= ~(1 << button);
     if (!manual_mode) usb_panel_mode2_send();
   }
 

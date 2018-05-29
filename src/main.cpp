@@ -1,32 +1,35 @@
 #include "WProgram.h"
 #include <Bounce.h>
 
-const int mode1Pin = 23;
-const int mode3Pin = 22;
+const int mode1Pin = 0;
+const int mode3Pin = 1;
 
-Bounce mode1Button = Bounce(mode1Pin, 10);
-Bounce mode3Button = Bounce(mode3Pin, 10);
+const int com1RotaryPinA = 23;
+const int com1RotaryPinB = 22;
+const int com2RotaryPinA = 8;
+const int com2RotaryPinB = 9;
+const int kneeboardRotaryPinA = 10;
+const int kneeboardRotaryPinB = 11;
 
-const byte COLS = 7;
+const byte COLS = 6;
 const byte ROWS = 6;
 
 const int columnPins[COLS] = {
-  11,
-  10,
-  9,
-  8,
-  7,
-  6,
-  5,
+  19,
+  18,
+  17,
+  16,
+  15,
+  14,
 };
 
 const int rowPins[ROWS] = {
-  14,
-  15,
-  16,
-  17,
-  18,
-  19,
+  7,
+  6,
+  5,
+  4,
+  3,
+  2,
 };
 
 const int com1PressButton = 21;
@@ -46,17 +49,17 @@ struct KeyAction {
 
 struct Action
 {
-    enum { None, Button, Key } kind;
-    union {
-      int unsigned button;
-      KeyAction key;
-    };
+  enum { None, Button, Key } kind;
+  union {
+    int unsigned button;
+    KeyAction key;
+  };
 };
 
 Action actions[COLS][ROWS] = {
   // Column 1
   {
-    {Action::None, 0},
+    {Action::Button, 20},
     {Action::Button, 1},
     {Action::Button, 2},
     {Action::Button, 3},
@@ -65,7 +68,7 @@ Action actions[COLS][ROWS] = {
   },
   // Column 2
   {
-    {Action::Button, 20},
+    {Action::Button, 19},
     {Action::Key, {.key = KeyAction{KEY_DELETE, KEY_DELETE}}},
     {Action::Key, {.key = KeyAction{KEY_F7, KEYPAD_7}}},
     {Action::Key, {.key = KeyAction{KEY_F4, KEYPAD_4}}},
@@ -74,7 +77,7 @@ Action actions[COLS][ROWS] = {
   },
   // Column 3
   {
-    {Action::Button, 19},
+    {Action::Button, 18},
     {Action::Key, {.key = KeyAction{KEY_F10, KEYPAD_0}}},
     {Action::Key, {.key = KeyAction{KEY_F8, KEYPAD_8}}},
     {Action::Key, {.key = KeyAction{KEY_F5, KEYPAD_5}}},
@@ -83,7 +86,7 @@ Action actions[COLS][ROWS] = {
   },
   // Column 4
   {
-    {Action::Button, 18},
+    {Action::Button, 17},
     {Action::Key, {.key = KeyAction{KEYPAD_ENTER, KEYPAD_ENTER}}},
     {Action::Key, {.key = KeyAction{KEY_F9, KEYPAD_9}}},
     {Action::Key, {.key = KeyAction{KEY_F6, KEYPAD_6}}},
@@ -92,93 +95,153 @@ Action actions[COLS][ROWS] = {
   },
   // Column 4
   {
-    {Action::Button, 17},
+    {Action::Button, 16},
     {Action::Button, kneeboardPressButton},
-    {Action::Button, com1RightRotateButton},
-    {Action::Button, com1LeftRotateButton},
+    {Action::None, 0},
+    {Action::Button, com2PressButton},
     {Action::Button, com1PressButton},
     {Action::Button, 9},
   },
-  // Column 5
-  {
-    {Action::Button, 16},
-    {Action::Button, kneeboardLeftRotateButton},
-    {Action::Button, com2RightRotateButton},
-    {Action::Button, com2LeftRotateButton},
-    {Action::Button, com2PressButton},
-    {Action::Button, 10},
-  },
   // Column 6
   {
-    {Action::Button, kneeboardRightRotateButton},
     {Action::Button, 15},
     {Action::Button, 14},
     {Action::Button, 13},
     {Action::Button, 12},
     {Action::Button, 11},
+    {Action::Button, 10},
   },
 };
 
+volatile boolean com1Fired;
+volatile boolean com1Clockwise;
+volatile boolean com2Fired;
+volatile boolean com2Clockwise;
+volatile boolean kneeboardFired;
+volatile boolean kneeboardClockwise;
+
+void rotaryCom1Changed() {
+  if (digitalRead(com1RotaryPinA)) {
+    com1Clockwise = !digitalRead(com1RotaryPinB);
+  } else {
+    com1Clockwise = digitalRead(com1RotaryPinB);
+  }
+
+  com1Fired = true;
+}
+
+void rotaryCom2Changed() {
+  if (digitalRead(com2RotaryPinA)) {
+    com2Clockwise = !digitalRead(com2RotaryPinB);
+  } else {
+    com2Clockwise = digitalRead(com2RotaryPinB);
+  }
+
+  com2Fired = true;
+}
+
+void rotaryKneeboardChanged() {
+  if (digitalRead(kneeboardRotaryPinA)) {
+    kneeboardClockwise = !digitalRead(kneeboardRotaryPinB);
+  } else {
+    kneeboardClockwise = digitalRead(kneeboardRotaryPinB);
+  }
+
+  kneeboardFired = true;
+}
+
 void setup() {
-  Serial.begin(9600);
+  // Serial.begin(9600);
 
   PanelMode1.useManualSend(true);
   PanelMode2.useManualSend(true);
   PanelMode3.useManualSend(true);
+
+  pinMode(mode1Pin, INPUT_PULLUP);
+  pinMode(mode3Pin, INPUT_PULLUP);
+
+  pinMode(com1RotaryPinA, INPUT_PULLUP);
+  pinMode(com1RotaryPinB, INPUT_PULLUP);
+  pinMode(com2RotaryPinA, INPUT_PULLUP);
+  pinMode(com2RotaryPinB, INPUT_PULLUP);
+  pinMode(kneeboardRotaryPinA, INPUT_PULLUP);
+  pinMode(kneeboardRotaryPinB, INPUT_PULLUP);
+
+  attachInterrupt(com1RotaryPinA, rotaryCom1Changed, CHANGE);
+  attachInterrupt(com2RotaryPinA, rotaryCom2Changed, CHANGE);
+  attachInterrupt(kneeboardRotaryPinA, rotaryKneeboardChanged, CHANGE);
 
   // set pin mode for all rows and columns
   for (int i = 0; i < COLS; ++i) {
     pinMode(columnPins[i], OUTPUT);
   }
   for (int i = 0; i < ROWS; ++i) {
-    pinMode(rowPins[i], INPUT_PULLUP);
+    pinMode(rowPins[i], INPUT_PULLDOWN);
+  }
+}
+
+auto changed = false;
+auto zeroed = true;
+
+void pressButton(const int unsigned button, const unsigned int mode) {
+  // char buf[50];
+  // sprintf(buf, "Button %d pressed", button);
+  // Serial.println(buf);
+
+  switch (mode) {
+  case 1:
+    PanelMode1.button(button, HIGH);
+    break;
+  case 2:
+    PanelMode2.button(button, HIGH);
+    break;
+  case 3:
+    PanelMode3.button(button, HIGH);
+    break;
   }
 
-  // // onboard LED
-  // pinMode(13, OUTPUT);
+  zeroed = false;
+  changed = true;
 }
 
 // the loop() methor runs over and over again,
 // as long as the board has power
 void loop() {
-  PanelMode1.reset();
-  PanelMode2.reset();
-  PanelMode3.reset();
+  // Serial.println("loop");
 
-  mode1Button.update();
-  unsigned int mode = 2;
-  if (mode1Button.fallingEdge()) {
-    mode = 1;
+  changed = false;
+
+  if (!zeroed) {
+    PanelMode1.reset();
+    PanelMode2.reset();
+    PanelMode3.reset();
+    zeroed = true;
+    changed = true;
   }
-  if (mode3Button.fallingEdge()) {
+
+  unsigned int mode = 2;
+  if (digitalRead(mode1Pin) == LOW) {
+    mode = 1;
+    // Serial.println("Mode 1");
+  }
+  if (digitalRead(mode3Pin) == LOW) {
     mode = 3;
+    // Serial.println("Mode 3");
   }
 
   for (auto x = 0; x < COLS; ++x) {
     digitalWrite(columnPins[x], HIGH);
 
     for (auto y = 0; y < ROWS; ++y) {
-      if (digitalRead(rowPins[y]) == LOW) { // PRESSED
-        auto action = actions[x][y];
-        switch (action.kind) {
+      auto action = &actions[x][y];
+      auto state = digitalRead(rowPins[y]);
+
+      if (state == HIGH) { // PRESSED
+        switch (action->kind) {
         case Action::None:
           break;
         case Action::Button:
-          char buf[50];
-          sprintf(buf, "Button %d pressed", action.button);
-          Serial.println(buf);
-
-          switch (mode) {
-          case 1:
-            PanelMode1.button(action.button, HIGH);
-            break;
-          case 2:
-            PanelMode2.button(action.button, HIGH);
-            break;
-          case 3:
-            PanelMode3.button(action.button, HIGH);
-            break;
-          }
+          pressButton(action->button, mode);
 
           break;
         case Action::Key:
@@ -186,12 +249,12 @@ void loop() {
           switch (mode) {
           case 1:
           case 3:
-            Keyboard.press(action.key.primary);
-            Keyboard.release(action.key.primary);
+            Keyboard.press(action->key.primary);
+            Keyboard.release(action->key.primary);
             break;
           case 2:
-            Keyboard.press(action.key.secondary);
-            Keyboard.release(action.key.secondary);
+            Keyboard.press(action->key.secondary);
+            Keyboard.release(action->key.secondary);
             break;
           }
 
@@ -203,14 +266,47 @@ void loop() {
     digitalWrite(columnPins[x], LOW);
   }
 
-  // send current button states
-  PanelMode1.send_now();
-  PanelMode2.send_now();
-  PanelMode3.send_now();
+  if (com1Fired) {
+    if (com1Clockwise) {
+      pressButton(com1RightRotateButton, mode);
+      // Serial.println("COM1 right");
+    } else {
+      pressButton(com1LeftRotateButton, mode);
+      // Serial.println("COM1 left");
+    }
+    com1Fired = false;
+  }
 
-  // Note: there should not be any long delays in loop(), so this runs repetitively at a rate
-  // faster than the buttons could be pressed and released.
-  delay(100);
+  if (com2Fired) {
+    if (com2Clockwise) {
+      pressButton(com2RightRotateButton, mode);
+      // Serial.println("COM2 right");
+    } else {
+      pressButton(com2LeftRotateButton, mode);
+      // Serial.println("COM2 left");
+    }
+    com2Fired = false;
+  }
+
+  if (kneeboardFired) {
+    if (kneeboardClockwise) {
+      pressButton(kneeboardRightRotateButton, mode);
+      // Serial.println("Kneeboard right");
+    } else {
+      pressButton(kneeboardLeftRotateButton, mode);
+      // Serial.println("Kneeboard left");
+    }
+    kneeboardFired = false;
+  }
+
+  // send current button states
+  if (changed) {
+    PanelMode1.send_now();
+    PanelMode2.send_now();
+    PanelMode3.send_now();
+  }
+
+  delay(50);
 }
 
 
