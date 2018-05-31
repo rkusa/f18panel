@@ -45,6 +45,8 @@ const int kneeboardRightRotateButton = 29;
 struct KeyAction {
   int primary;
   int secondary;
+  int pressed;
+  int last_pressed;
 };
 
 struct Action
@@ -69,28 +71,28 @@ Action actions[COLS][ROWS] = {
   // Column 2
   {
     {Action::Button, 19},
-    {Action::Key, {.key = KeyAction{KEY_DELETE, KEY_DELETE}}},
-    {Action::Key, {.key = KeyAction{KEY_F7, KEYPAD_7}}},
-    {Action::Key, {.key = KeyAction{KEY_F4, KEYPAD_4}}},
-    {Action::Key, {.key = KeyAction{KEY_F1, KEYPAD_1}}},
+    {Action::Key, {.key = KeyAction{KEY_F12, KEY_DELETE, 0, 0}}},
+    {Action::Key, {.key = KeyAction{KEY_F7, KEY_7, 0, 0}}},
+    {Action::Key, {.key = KeyAction{KEY_F4, KEY_4, 0, 0}}},
+    {Action::Key, {.key = KeyAction{KEY_F1, KEY_1, 0, 0}}},
     {Action::Button, 6},
   },
   // Column 3
   {
     {Action::Button, 18},
-    {Action::Key, {.key = KeyAction{KEY_F10, KEYPAD_0}}},
-    {Action::Key, {.key = KeyAction{KEY_F8, KEYPAD_8}}},
-    {Action::Key, {.key = KeyAction{KEY_F5, KEYPAD_5}}},
-    {Action::Key, {.key = KeyAction{KEY_F2, KEYPAD_2}}},
+    {Action::Key, {.key = KeyAction{KEY_F10, KEY_0, 0, 0}}},
+    {Action::Key, {.key = KeyAction{KEY_F8, KEY_8, 0, 0}}},
+    {Action::Key, {.key = KeyAction{KEY_F5, KEY_5, 0, 0}}},
+    {Action::Key, {.key = KeyAction{KEY_F2, KEY_2, 0, 0}}},
     {Action::Button, 7},
   },
   // Column 4
   {
     {Action::Button, 17},
-    {Action::Key, {.key = KeyAction{KEYPAD_ENTER, KEYPAD_ENTER}}},
-    {Action::Key, {.key = KeyAction{KEY_F9, KEYPAD_9}}},
-    {Action::Key, {.key = KeyAction{KEY_F6, KEYPAD_6}}},
-    {Action::Key, {.key = KeyAction{KEY_F3, KEYPAD_3}}},
+    {Action::Key, {.key = KeyAction{KEYPAD_ENTER, KEYPAD_ENTER, 0, 0}}},
+    {Action::Key, {.key = KeyAction{KEY_F9, KEY_9, 0, 0}}},
+    {Action::Key, {.key = KeyAction{KEY_F6, KEY_6, 0, 0}}},
+    {Action::Key, {.key = KeyAction{KEY_F3, KEY_3, 0, 0}}},
     {Action::Button, 8},
   },
   // Column 4
@@ -207,7 +209,7 @@ void pressButton(const int unsigned button, const unsigned int mode) {
 // the loop() methor runs over and over again,
 // as long as the board has power
 void loop() {
-  // Serial.println("loop");
+  Serial.println("loop");
 
   changed = false;
 
@@ -236,30 +238,46 @@ void loop() {
       auto action = &actions[x][y];
       auto state = digitalRead(rowPins[y]);
 
-      if (state == HIGH) { // PRESSED
-        switch (action->kind) {
-        case Action::None:
-          break;
-        case Action::Button:
+      switch (action->kind) {
+      case Action::None:
+        break;
+      case Action::Button:
+        if (state == HIGH) { // PRESSED
           pressButton(action->button, mode);
+        }
 
+        break;
+      case Action::Key:
+        int key;
+        switch (mode) {
+        case 1:
+        case 3:
+          key = action->key.primary;
           break;
-        case Action::Key:
-
-          switch (mode) {
-          case 1:
-          case 3:
-            Keyboard.press(action->key.primary);
-            Keyboard.release(action->key.primary);
-            break;
-          case 2:
-            Keyboard.press(action->key.secondary);
-            Keyboard.release(action->key.secondary);
-            break;
-          }
-
+        case 2:
+          key = action->key.secondary;
           break;
         }
+
+        if (state == HIGH) { // PRESSED
+          // debounce
+          if (millis() > (action->key.last_pressed+10) && (action->key.pressed == 0 || action->key.pressed != key)) {
+            if (action->key.pressed != 0) {
+              Keyboard.release(action->key.pressed);
+            }
+            Keyboard.press(key);
+            Keyboard.release(key);
+            action->key.pressed = key;
+            action->key.last_pressed = millis();
+          }
+        } else {
+          if (action->key.pressed > 0) {
+            Keyboard.release(action->key.pressed);
+            action->key.pressed = 0;
+          }
+        }
+
+        break;
       }
     }
 
@@ -306,7 +324,7 @@ void loop() {
     PanelMode3.send_now();
   }
 
-  delay(50);
+  // delay(1);
 }
 
 
