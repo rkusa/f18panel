@@ -115,11 +115,11 @@ Action actions[COLS][ROWS] = {
   },
 };
 
-volatile boolean com1Fired;
+volatile int unsigned com1Fired = 0;
 volatile boolean com1Clockwise;
-volatile boolean com2Fired;
+volatile int unsigned com2Fired = 0;
 volatile boolean com2Clockwise;
-volatile boolean kneeboardFired;
+volatile int unsigned kneeboardFired = 0;
 volatile boolean kneeboardClockwise;
 
 void rotaryCom1Changed() {
@@ -129,7 +129,7 @@ void rotaryCom1Changed() {
     com1Clockwise = digitalRead(com1RotaryPinB);
   }
 
-  com1Fired = true;
+  com1Fired++;
 }
 
 void rotaryCom2Changed() {
@@ -139,7 +139,7 @@ void rotaryCom2Changed() {
     com2Clockwise = digitalRead(com2RotaryPinB);
   }
 
-  com2Fired = true;
+  com2Fired++;
 }
 
 void rotaryKneeboardChanged() {
@@ -149,15 +149,19 @@ void rotaryKneeboardChanged() {
     kneeboardClockwise = digitalRead(kneeboardRotaryPinB);
   }
 
-  kneeboardFired = true;
+  kneeboardFired++;
 }
 
 void setup() {
-  // Serial.begin(9600);
+  #if defined(DUSB_SERIAL)
+  Serial.begin(9600);
+  #endif
 
+  #if defined(USB_PANEL)
   PanelMode1.useManualSend(true);
   PanelMode2.useManualSend(true);
   PanelMode3.useManualSend(true);
+  #endif
 
   pinMode(mode1Pin, INPUT_PULLUP);
   pinMode(mode3Pin, INPUT_PULLUP);
@@ -186,10 +190,13 @@ auto changed = false;
 auto zeroed = true;
 
 void pressButton(const int unsigned button, const unsigned int mode) {
-  // char buf[50];
-  // sprintf(buf, "Button %d pressed", button);
-  // Serial.println(buf);
+  #if defined(DUSB_SERIAL)
+  char buf[50];
+  sprintf(buf, "Button %d pressed (mode %d)", button, mode);
+  Serial.println(buf);
+  #endif
 
+  #if defined(USB_PANEL)
   switch (mode) {
   case 1:
     PanelMode1.button(button, HIGH);
@@ -201,6 +208,7 @@ void pressButton(const int unsigned button, const unsigned int mode) {
     PanelMode3.button(button, HIGH);
     break;
   }
+  #endif
 
   zeroed = false;
   changed = true;
@@ -209,14 +217,16 @@ void pressButton(const int unsigned button, const unsigned int mode) {
 // the loop() methor runs over and over again,
 // as long as the board has power
 void loop() {
-  Serial.println("loop");
+  // Serial.println("loop");
 
   changed = false;
 
   if (!zeroed) {
+    #if defined(USB_PANEL)
     PanelMode1.reset();
     PanelMode2.reset();
     PanelMode3.reset();
+    #endif
     zeroed = true;
     changed = true;
   }
@@ -259,6 +269,7 @@ void loop() {
           break;
         }
 
+        #if defined(USB_PANEL)
         if (state == HIGH) { // PRESSED
           // debounce
           if (millis() > (action->key.last_pressed+10) && (action->key.pressed == 0 || action->key.pressed != key)) {
@@ -276,6 +287,7 @@ void loop() {
             action->key.pressed = 0;
           }
         }
+        #endif
 
         break;
       }
@@ -284,7 +296,7 @@ void loop() {
     digitalWrite(columnPins[x], LOW);
   }
 
-  if (com1Fired) {
+  if (com1Fired > 1) {
     if (com1Clockwise) {
       pressButton(com1RightRotateButton, mode);
       // Serial.println("COM1 right");
@@ -292,10 +304,10 @@ void loop() {
       pressButton(com1LeftRotateButton, mode);
       // Serial.println("COM1 left");
     }
-    com1Fired = false;
+    com1Fired = 0;
   }
 
-  if (com2Fired) {
+  if (com2Fired > 1) {
     if (com2Clockwise) {
       pressButton(com2RightRotateButton, mode);
       // Serial.println("COM2 right");
@@ -303,10 +315,10 @@ void loop() {
       pressButton(com2LeftRotateButton, mode);
       // Serial.println("COM2 left");
     }
-    com2Fired = false;
+    com2Fired = 0;
   }
 
-  if (kneeboardFired) {
+  if (kneeboardFired > 1) {
     if (kneeboardClockwise) {
       pressButton(kneeboardRightRotateButton, mode);
       // Serial.println("Kneeboard right");
@@ -314,15 +326,17 @@ void loop() {
       pressButton(kneeboardLeftRotateButton, mode);
       // Serial.println("Kneeboard left");
     }
-    kneeboardFired = false;
+    kneeboardFired = 0;
   }
 
   // send current button states
+  #if defined(USB_PANEL)
   if (changed) {
     PanelMode1.send_now();
     PanelMode2.send_now();
     PanelMode3.send_now();
   }
+  #endif
 
   // delay(1);
 }
