@@ -1,15 +1,9 @@
 #include "WProgram.h"
 #include <Bounce.h>
+#include <Encoder.h>
 
 const int mode1Pin = 0;
 const int mode3Pin = 1;
-
-const int com1RotaryPinA = 23;
-const int com1RotaryPinB = 22;
-const int com2RotaryPinA = 8;
-const int com2RotaryPinB = 9;
-const int kneeboardRotaryPinA = 10;
-const int kneeboardRotaryPinB = 11;
 
 const byte COLS = 6;
 const byte ROWS = 6;
@@ -41,6 +35,13 @@ const int com2RightRotateButton = 26;
 const int kneeboardPressButton = 27;
 const int kneeboardLeftRotateButton = 28;
 const int kneeboardRightRotateButton = 29;
+
+Encoder com1Encoder(23, 22);
+Encoder com2Encoder(8, 9);
+Encoder kneeboardEncoder(10, 11);
+long oldCom1Position = 0;
+long oldCom2Position = 0;
+long oldKneeboardPosition = 0;
 
 struct KeyAction {
   int primary;
@@ -115,45 +116,8 @@ Action actions[COLS][ROWS] = {
   },
 };
 
-volatile int unsigned com1Fired = 0;
-volatile boolean com1Clockwise;
-volatile int unsigned com2Fired = 0;
-volatile boolean com2Clockwise;
-volatile int unsigned kneeboardFired = 0;
-volatile boolean kneeboardClockwise;
-
-void rotaryCom1Changed() {
-  if (digitalRead(com1RotaryPinA)) {
-    com1Clockwise = !digitalRead(com1RotaryPinB);
-  } else {
-    com1Clockwise = digitalRead(com1RotaryPinB);
-  }
-
-  com1Fired++;
-}
-
-void rotaryCom2Changed() {
-  if (digitalRead(com2RotaryPinA)) {
-    com2Clockwise = !digitalRead(com2RotaryPinB);
-  } else {
-    com2Clockwise = digitalRead(com2RotaryPinB);
-  }
-
-  com2Fired++;
-}
-
-void rotaryKneeboardChanged() {
-  if (digitalRead(kneeboardRotaryPinA)) {
-    kneeboardClockwise = !digitalRead(kneeboardRotaryPinB);
-  } else {
-    kneeboardClockwise = digitalRead(kneeboardRotaryPinB);
-  }
-
-  kneeboardFired++;
-}
-
 void setup() {
-  #if defined(DUSB_SERIAL)
+  #if defined(USB_SERIAL)
   Serial.begin(9600);
   #endif
 
@@ -165,17 +129,6 @@ void setup() {
 
   pinMode(mode1Pin, INPUT_PULLUP);
   pinMode(mode3Pin, INPUT_PULLUP);
-
-  pinMode(com1RotaryPinA, INPUT_PULLUP);
-  pinMode(com1RotaryPinB, INPUT_PULLUP);
-  pinMode(com2RotaryPinA, INPUT_PULLUP);
-  pinMode(com2RotaryPinB, INPUT_PULLUP);
-  pinMode(kneeboardRotaryPinA, INPUT_PULLUP);
-  pinMode(kneeboardRotaryPinB, INPUT_PULLUP);
-
-  attachInterrupt(com1RotaryPinA, rotaryCom1Changed, CHANGE);
-  attachInterrupt(com2RotaryPinA, rotaryCom2Changed, CHANGE);
-  attachInterrupt(kneeboardRotaryPinA, rotaryKneeboardChanged, CHANGE);
 
   // set pin mode for all rows and columns
   for (int i = 0; i < COLS; ++i) {
@@ -190,7 +143,7 @@ auto changed = false;
 auto zeroed = true;
 
 void pressButton(const int unsigned button, const unsigned int mode) {
-  #if defined(DUSB_SERIAL)
+  #if defined(USB_SERIAL)
   char buf[50];
   sprintf(buf, "Button %d pressed (mode %d)", button, mode);
   Serial.println(buf);
@@ -296,37 +249,34 @@ void loop() {
     digitalWrite(columnPins[x], LOW);
   }
 
-  if (com1Fired > 1) {
-    if (com1Clockwise) {
-      pressButton(com1RightRotateButton, mode);
-      // Serial.println("COM1 right");
-    } else {
-      pressButton(com1LeftRotateButton, mode);
-      // Serial.println("COM1 left");
-    }
-    com1Fired = 0;
+  long newPosition = com2Encoder.read();
+  long diff = oldCom2Position - newPosition;
+  if (diff >= 4) {
+    pressButton(com2RightRotateButton, mode);
+    oldCom2Position = newPosition;
+  } else if (diff <= -4) {
+    pressButton(com2LeftRotateButton, mode);
+    oldCom2Position = newPosition;
   }
 
-  if (com2Fired > 1) {
-    if (com2Clockwise) {
-      pressButton(com2RightRotateButton, mode);
-      // Serial.println("COM2 right");
-    } else {
-      pressButton(com2LeftRotateButton, mode);
-      // Serial.println("COM2 left");
-    }
-    com2Fired = 0;
+  newPosition = com1Encoder.read();
+  diff = oldCom1Position - newPosition;
+  if (diff >= 4) {
+    pressButton(com1RightRotateButton, mode);
+    oldCom1Position = newPosition;
+  } else if (diff <= -4) {
+    pressButton(com1LeftRotateButton, mode);
+    oldCom1Position = newPosition;
   }
 
-  if (kneeboardFired > 1) {
-    if (kneeboardClockwise) {
-      pressButton(kneeboardRightRotateButton, mode);
-      // Serial.println("Kneeboard right");
-    } else {
-      pressButton(kneeboardLeftRotateButton, mode);
-      // Serial.println("Kneeboard left");
-    }
-    kneeboardFired = 0;
+  newPosition = kneeboardEncoder.read();
+  diff = oldKneeboardPosition - newPosition;
+  if (diff >= 4) {
+    pressButton(kneeboardRightRotateButton, mode);
+    oldKneeboardPosition = newPosition;
+  } else if (diff <= -4) {
+    pressButton(kneeboardLeftRotateButton, mode);
+    oldKneeboardPosition = newPosition;
   }
 
   // send current button states
@@ -338,7 +288,7 @@ void loop() {
   }
   #endif
 
-  // delay(1);
+  delay(8);
 }
 
 
