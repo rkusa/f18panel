@@ -60,6 +60,7 @@
 #include "usb_panel_mode1.h"
 #include "usb_panel_mode2.h"
 #include "usb_panel_mode3.h"
+#include "usb_panel_mode4.h"
 
 #include "usb_midi.h"
 #include "usb_rawhid.h"

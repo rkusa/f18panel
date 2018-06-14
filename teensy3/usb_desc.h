@@ -156,8 +156,8 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define PRODUCT_NAME_LEN      9
   #define EP0_SIZE              64 // packet size we will send
 
-  #define NUM_ENDPOINTS   7
-  #define NUM_INTERFACE   6
+  #define NUM_ENDPOINTS   8
+  #define NUM_INTERFACE   7
   #define NUM_USB_BUFFERS 30
 
   // #define CDC_STATUS_INTERFACE  0
@@ -192,12 +192,17 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define PANEL_MODE3_SIZE         4
   #define PANEL_MODE3_INTERVAL     1
 
-  #define KEYBOARD_INTERFACE       4
-  #define KEYBOARD_ENDPOINT        6
+  #define PANEL_MODE4_ENDPOINT     6
+  #define PANEL_MODE4_INTERFACE    4
+  #define PANEL_MODE4_SIZE         4
+  #define PANEL_MODE4_INTERVAL     1
+
+  #define KEYBOARD_INTERFACE       5
+  #define KEYBOARD_ENDPOINT        7
   #define KEYBOARD_SIZE            8
   #define KEYBOARD_INTERVAL        1
-  #define KEYMEDIA_INTERFACE       5
-  #define KEYMEDIA_ENDPOINT        7
+  #define KEYMEDIA_INTERFACE       6
+  #define KEYMEDIA_ENDPOINT        8
   #define KEYMEDIA_SIZE            8
   #define KEYMEDIA_INTERVAL        4
 
@@ -208,6 +213,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define ENDPOINT5_CONFIG  ENDPOINT_TRANSIMIT_ONLY
   #define ENDPOINT6_CONFIG  ENDPOINT_TRANSIMIT_ONLY
   #define ENDPOINT7_CONFIG  ENDPOINT_TRANSIMIT_ONLY
+  #define ENDPOINT8_CONFIG  ENDPOINT_TRANSIMIT_ONLY
 
 #elif defined(USB_KEYBOARDONLY)
   #define VENDOR_ID		0x16C0

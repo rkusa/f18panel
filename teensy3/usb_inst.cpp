@@ -83,6 +83,11 @@ usb_panel_mode3_class PanelMode3;
 uint8_t usb_panel_mode3_class::manual_mode = 0;
 #endif
 
+#ifdef PANEL_MODE4_INTERFACE
+usb_panel_mode4_class PanelMode4;
+uint8_t usb_panel_mode4_class::manual_mode = 0;
+#endif
+
 #ifdef USB_DISABLED
 usb_serial_class Serial;
 #endif

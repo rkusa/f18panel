@@ -4,6 +4,7 @@
 
 const int mode1Pin = 0;
 const int mode3Pin = 1;
+const int mode4Pin = 21;
 
 const byte COLS = 6;
 const byte ROWS = 6;
@@ -125,10 +126,12 @@ void setup() {
   PanelMode1.useManualSend(true);
   PanelMode2.useManualSend(true);
   PanelMode3.useManualSend(true);
+  PanelMode4.useManualSend(true);
   #endif
 
   pinMode(mode1Pin, INPUT_PULLUP);
   pinMode(mode3Pin, INPUT_PULLUP);
+  pinMode(mode4Pin, INPUT_PULLUP);
 
   // set pin mode for all rows and columns
   for (int i = 0; i < COLS; ++i) {
@@ -160,6 +163,9 @@ void pressButton(const int unsigned button, const unsigned int mode) {
   case 3:
     PanelMode3.button(button, HIGH);
     break;
+  case 4:
+    PanelMode4.button(button, HIGH);
+    break;
   }
   #endif
 
@@ -170,8 +176,6 @@ void pressButton(const int unsigned button, const unsigned int mode) {
 // the loop() methor runs over and over again,
 // as long as the board has power
 void loop() {
-  // Serial.println("loop");
-
   changed = false;
 
   if (!zeroed) {
@@ -179,19 +183,21 @@ void loop() {
     PanelMode1.reset();
     PanelMode2.reset();
     PanelMode3.reset();
+    PanelMode4.reset();
     #endif
     zeroed = true;
     changed = true;
   }
 
-  unsigned int mode = 2;
-  if (digitalRead(mode1Pin) == LOW) {
-    mode = 1;
-    // Serial.println("Mode 1");
-  }
-  if (digitalRead(mode3Pin) == LOW) {
-    mode = 3;
-    // Serial.println("Mode 3");
+  unsigned int mode = 4;
+  if (digitalRead(mode4Pin) == HIGH) {
+    mode = 2;
+    if (digitalRead(mode1Pin) == LOW) {
+      mode = 1;
+    }
+    if (digitalRead(mode3Pin) == LOW) {
+      mode = 3;
+    }
   }
 
   for (auto x = 0; x < COLS; ++x) {
@@ -214,10 +220,11 @@ void loop() {
         int key;
         switch (mode) {
         case 1:
+        case 2:
         case 3:
           key = action->key.primary;
           break;
-        case 2:
+        case 4:
           key = action->key.secondary;
           break;
         }
@@ -285,6 +292,7 @@ void loop() {
     PanelMode1.send_now();
     PanelMode2.send_now();
     PanelMode3.send_now();
+    PanelMode4.send_now();
   }
   #endif
 
