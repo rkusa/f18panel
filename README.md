@@ -1,50 +1,47 @@
 
 
+# DCS World F18 VR Control Panel
 
+![picture.jpg](picture.jpg)
 
-
-Dependencies
+**Dependencies**
 
 ```
 brew install teensy_loader_cli
 ```
 
 
-Deploy
+**Deploy**
 
 ```
-teensy_loader_cli --mcu=mk20dx256 teensy.hex
-
-or
-
 make upload
 ```
 
-Connect to serial
+**Debug**
+
+Comment line 15 and uncomment line 16 in the Makefile. Rebuild and upload. Connect to serial via
 
 ```
-screen /dev/tty.usbmodem2470841 9600
+screen /dev/tty.usbmodem2876 9600
 ```
 
+or 
 
+```
+make serial
+```
 
+Project started from the project template https://github.com/apmorton/teensy-template
 
+## Teensy 3.X Project Template
 
-
-
-
-Teensy 3.X Project Template
-===========================
-
-Purpose
--------
+### Purpose
 
 An easy starting point for a Teensy 3.X project which might not fit inside the
 arduino build environment.
 
 
-Reasons to Use
---------------
+### Reasons to Use
 
 - You need to modify the teensy core
 - You don't love Java IDE's
@@ -52,16 +49,13 @@ Reasons to Use
 - Because
 
 
-Setup
------
+### Setup
 
 Install the Teensy udev rule: `sudo cp tools/49-teensy.rules /etc/udev/rules.d/`
 
 Then unplug your Teensy and plug it back in.
 
-
-Using
------
+### Using
 
 1. Put your code in `src/main.cpp`
 2. Put any libraries you need in `libraries`
@@ -70,8 +64,7 @@ Using
 5. Upload your code ```make upload```
 
 
-Make Targets
-------------
+### Make Targets
 
 - `make` alias for `make hex`
 - `make build` compiles everything and produces a .elf
@@ -81,8 +74,7 @@ Make Targets
 - `make reboot` reboots the teensy
 
 
-Where everything came from
---------------------------
+### Where everything came from
 
 - The `teensy3` sub-folder is taken from [The Teensy 3 Cores](https://github.com/PaulStoffregen/cores/tree/master/teensy3)
 - The `tools` sub-folder is taken from [Teensyduino](http://www.pjrc.com/teensy/td_download.html)

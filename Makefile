@@ -5,7 +5,6 @@ TARGET = $(notdir $(CURDIR))
 TEENSY = 31
 
 # Set to 24000000, 48000000, or 96000000 to set CPU core speed
-TEENSY_CORE_SPEED = 96000000
 TEENSY_CORE_SPEED = 48000000
 
 # Some libraries will require this to be defined
@@ -132,6 +131,9 @@ post_compile: $(TARGET).hex
 
 reboot:
 	@-$(abspath $(TOOLSPATH))/teensy_reboot
+
+serial:
+    screen /dev/tty.usbmodem2876 9600
 
 upload: post_compile reboot
 
