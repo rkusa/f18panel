@@ -237,7 +237,6 @@ void loop() {
               Keyboard.release(action->key.pressed);
             }
             Keyboard.press(key);
-            Keyboard.release(key);
             action->key.pressed = key;
             action->key.last_pressed = millis();
           }
