@@ -179,9 +179,9 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
 
   #define PANEL_MODE1_ENDPOINT     3
   #define PANEL_MODE1_INTERFACE    1
-  #define PANEL_MODE1_SIZE         10 // * 8 = 80 max button count (must fit PANEL_MODE1_MAX_BUTTON)
+  #define PANEL_MODE1_SIZE         12 // * 8 = 96 max button count (must fit PANEL_MODE1_MAX_BUTTON)
   #define PANEL_MODE1_INTERVAL     1
-  #define PANEL_MODE1_MAX_BUTTON   75
+  #define PANEL_MODE1_MAX_BUTTON   95
 
   #define KEYBOARD_INTERFACE       2
   #define KEYBOARD_ENDPOINT        4

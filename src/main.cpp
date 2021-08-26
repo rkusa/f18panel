@@ -30,19 +30,20 @@ const int rowPins[ROWS] = {
 // 1-20: mode 1 outer buttons
 // 21-40: mode 2 outer buttons
 // 41-60: mode 3 outer buttons
+// 61-80: mode 4 outer buttons
 
-const int com1PressButton = 61;
-const int com1LeftRotateButton = 62;
-const int com1RightRotateButton = 63;
-// 64-66: mode 4 com 1
-const int com2PressButton = 67;
-const int com2LeftRotateButton = 68;
-const int com2RightRotateButton = 69;
-// 70-72: mode 4 com 2
+const int com1PressButton = 81;
+const int com1LeftRotateButton = 82;
+const int com1RightRotateButton = 83;
+// 84-86: mode 4 com 1
+const int com2PressButton = 87;
+const int com2LeftRotateButton = 88;
+const int com2RightRotateButton = 89;
+// 90-92: mode 4 com 2
 
-const int kneeboardPressButton = 73;
-const int kneeboardLeftRotateButton = 74;
-const int kneeboardRightRotateButton = 75;
+const int kneeboardPressButton = 93;
+const int kneeboardLeftRotateButton = 94;
+const int kneeboardRightRotateButton = 95;
 
 // 75 is the max button, value must be set in teensy3/usb_desc.c:125
 
@@ -156,15 +157,11 @@ void pressButton(const int unsigned button, const unsigned int mode) {
 
   // outer buttons
   if (press >= 1 && press <= 20) {
-    // disable for mode 4
-    if (mode == 4) {
-      return;
-    }
     press += 20 * (mode - 1);
   }
 
   // com rotaries
-  if (press >= 61 && press <= 69 && mode == 4) {
+  if (press >= 81 && press <= 89 && mode == 4) {
     press += 3;
   }
 
