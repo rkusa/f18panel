@@ -27,15 +27,24 @@ const int rowPins[ROWS] = {
   2,
 };
 
-const int com1PressButton = 21;
-const int com1LeftRotateButton = 22;
-const int com1RightRotateButton = 23;
-const int com2PressButton = 24;
-const int com2LeftRotateButton = 25;
-const int com2RightRotateButton = 26;
-const int kneeboardPressButton = 27;
-const int kneeboardLeftRotateButton = 28;
-const int kneeboardRightRotateButton = 29;
+// 1-20: mode 1 outer buttons
+// 21-40: mode 2 outer buttons
+// 41-60: mode 3 outer buttons
+
+const int com1PressButton = 61;
+const int com1LeftRotateButton = 62;
+const int com1RightRotateButton = 63;
+// 64-66: mode 4 com 1
+const int com2PressButton = 67;
+const int com2LeftRotateButton = 68;
+const int com2RightRotateButton = 69;
+// 70-72: mode 4 com 2
+
+const int kneeboardPressButton = 73;
+const int kneeboardLeftRotateButton = 74;
+const int kneeboardRightRotateButton = 75;
+
+// 75 is the max button, value must be set in teensy3/usb_desc.c:125
 
 Encoder com1Encoder(23, 22);
 Encoder com2Encoder(8, 9);
@@ -124,9 +133,6 @@ void setup() {
 
   #if defined(USB_PANEL)
   PanelMode1.useManualSend(true);
-  PanelMode2.useManualSend(true);
-  PanelMode3.useManualSend(true);
-  PanelMode4.useManualSend(true);
   #endif
 
   pinMode(mode1Pin, INPUT_PULLUP);
@@ -146,27 +152,30 @@ auto changed = false;
 auto zeroed = true;
 
 void pressButton(const int unsigned button, const unsigned int mode) {
+  auto press = button;
+
+  // outer buttons
+  if (press >= 1 && press <= 20) {
+    // disable for mode 4
+    if (mode == 4) {
+      return;
+    }
+    press += 20 * (mode - 1);
+  }
+
+  // com rotaries
+  if (press >= 61 && press <= 69 && mode == 4) {
+    press += 3;
+  }
+
   #if defined(USB_SERIAL)
   char buf[50];
-  sprintf(buf, "Button %d pressed (mode %d)", button, mode);
+  sprintf(buf, "Button %d pressed (mode %d)", press, mode);
   Serial.println(buf);
   #endif
 
   #if defined(USB_PANEL)
-  switch (mode) {
-  case 1:
-    PanelMode1.button(button, HIGH);
-    break;
-  case 2:
-    PanelMode2.button(button, HIGH);
-    break;
-  case 3:
-    PanelMode3.button(button, HIGH);
-    break;
-  case 4:
-    PanelMode4.button(button, HIGH);
-    break;
-  }
+  PanelMode1.button(press, HIGH);
   #endif
 
   zeroed = false;
@@ -181,9 +190,6 @@ void loop() {
   if (!zeroed) {
     #if defined(USB_PANEL)
     PanelMode1.reset();
-    PanelMode2.reset();
-    PanelMode3.reset();
-    PanelMode4.reset();
     #endif
     zeroed = true;
     changed = true;
@@ -289,9 +295,6 @@ void loop() {
   #if defined(USB_PANEL)
   if (changed) {
     PanelMode1.send_now();
-    PanelMode2.send_now();
-    PanelMode3.send_now();
-    PanelMode4.send_now();
   }
   #endif
 

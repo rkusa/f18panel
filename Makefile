@@ -133,7 +133,7 @@ reboot:
 	@-$(abspath $(TOOLSPATH))/teensy_reboot
 
 serial:
-	screen /dev/tty.usbmodem2470841 9600
+	screen /dev/tty.usbmodem24708401 9600
 
 upload: post_compile reboot
 
