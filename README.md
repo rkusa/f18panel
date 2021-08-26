@@ -10,6 +10,12 @@
 brew install teensy_loader_cli
 ```
 
+- Teensyduino: https://www.pjrc.com/teensy/td_download.html
+
+
+```
+git submodule update --init
+```
 
 **Deploy**
 
@@ -22,10 +28,10 @@ make upload
 Comment line 15 and uncomment line 16 in the Makefile. Rebuild and upload. Connect to serial via
 
 ```
-screen /dev/tty.usbmodem2876 9600
+screen /dev/tty.usbmodem2470841 9600
 ```
 
-or 
+or
 
 ```
 make serial
