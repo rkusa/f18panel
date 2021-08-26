@@ -151,7 +151,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   // #define DEVICE_SUBCLASS       0x02
   // #define DEVICE_PROTOCOL       0x01
   #define MANUFACTURER_NAME     {'M','A','R','K','U','S',' ','A','S','T'}
-  #define MANUFACTURER_NAME_LEN 19
+  #define MANUFACTURER_NAME_LEN 10
   #define PRODUCT_NAME          {'F','1','8',' ','P','a','n','e','l'}
   #define PRODUCT_NAME_LEN      9
   #define EP0_SIZE              64 // packet size we will send
@@ -179,8 +179,9 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
 
   #define PANEL_MODE1_ENDPOINT     3
   #define PANEL_MODE1_INTERFACE    1
-  #define PANEL_MODE1_SIZE         4
+  #define PANEL_MODE1_SIZE         10 // * 8 = 80 max button count (must fit PANEL_MODE1_MAX_BUTTON)
   #define PANEL_MODE1_INTERVAL     1
+  #define PANEL_MODE1_MAX_BUTTON   75
 
   #define KEYBOARD_INTERFACE       2
   #define KEYBOARD_ENDPOINT        4

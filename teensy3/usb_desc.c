@@ -120,9 +120,9 @@ static uint8_t panel_report_desc[] = {
     0x15, 0x00,                 //   Logical Minimum (0)
     0x25, 0x01,                 //   Logical Maximum (1)
     0x75, 0x01,                 //   Report Size (1)
-    0x95, 0x20,                 //   Report Count (32) 32 bytes, to be byte-aligned
+    0x95, 0x50,                 //   Report Count (80) 10 bytes, to be byte-aligned
     0x19, 0x01,                 //   Usage Minimum (Button #1)
-    0x29, 75,                   //   Usage Maximum (Button #75)
+    0x29, PANEL_MODE1_MAX_BUTTON, //   Usage Maximum (Button #75)
     0x81, 0x02,                 //   Input (variable,absolute)
     0xc0                        // END_COLLECTION
 };

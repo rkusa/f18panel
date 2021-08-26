@@ -12,7 +12,7 @@
 extern "C" {
 #endif
   int usb_panel_mode1_send(void);
-  extern uint32_t usb_panel_mode1_data[1];
+  extern uint32_t usb_panel_mode1_data[3];
 #ifdef __cplusplus
 }
 #endif
@@ -26,9 +26,21 @@ public:
   void end(void) { }
 
   void button(unsigned int button, bool val) {
-    if (--button >= 29) return;
-    if (val) usb_panel_mode1_data[0] |= (1 << button);
-    else usb_panel_mode1_data[0] &= ~(1 << button);
+    if (--button >= PANEL_MODE1_MAX_BUTTON) return;
+
+    // there are 32bit per array entry
+    size_t ix = 0;
+    while (button >= 32) {
+      button -= 32;
+      ix++;
+    }
+
+    if (ix > 2) {
+      return;
+    }
+
+    if (val) usb_panel_mode1_data[ix] |= (1 << button);
+    else usb_panel_mode1_data[ix] &= ~(1 << button);
     if (!manual_mode) usb_panel_mode1_send();
   }
 
