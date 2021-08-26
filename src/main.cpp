@@ -101,7 +101,7 @@ Action actions[COLS][ROWS] = {
   // Column 4
   {
     {Action::Button, 17},
-    {Action::Key, {.key = KeyAction{KEYPAD_ENTER, KEYPAD_ENTER, 0, 0}}},
+    {Action::Key, {.key = KeyAction{KEY_F11, KEYPAD_ENTER, 0, 0}}},
     {Action::Key, {.key = KeyAction{KEY_F9, KEY_9, 0, 0}}},
     {Action::Key, {.key = KeyAction{KEY_F6, KEY_6, 0, 0}}},
     {Action::Key, {.key = KeyAction{KEY_F3, KEY_3, 0, 0}}},
